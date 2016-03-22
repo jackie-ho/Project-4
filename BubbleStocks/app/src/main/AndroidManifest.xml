@@ -23,6 +23,33 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service
+            android:name="com.adi.ho.jackie.bubblestocks.Authenticator.AuthenticatorService">
+            <intent-filter>
+                <action android:name="android.accounts.AccountAuthenticator"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.accounts.AccountAuthenticator"
+                android:resource="@xml/authenticator" />
+        </service>
+
+        <service
+            android:name="com.adi.ho.jackie.bubblestocks.SyncAdapter.MySyncService"
+            >
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/syncadapter" />
+        </service>
+
+        <provider
+            android:name="com.adi.ho.jackie.bubblestocks.Database.StockContentProvider"
+            android:authorities="com.adi.ho.jackie.bubblestocks.Database.StockContentProvider"
+            android:label="my provider"
+            android:exported="false"
+            android:syncable="true"/>
     </application>
 
 </manifest>

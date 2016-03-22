@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
 
     public static final String stockTwitsAuthenticate = "";
     DBStock stock1;
-    public static final String AUTHORITY = "com.adi.ho.jackie.bubblestocks.StubProvider";
+    public static final String AUTHORITY = "com.adi.ho.jackie.bubblestocks.Database.StockContentProvider";
     // Account type
     public static final String ACCOUNT_TYPE = "example.com";
     // Account
@@ -42,21 +42,22 @@ public class MainActivity extends AppCompatActivity {
     RealmConfiguration realmConfig;
     Realm realm;
     Account mAccount;
-
+    ContentResolver mResolver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        mResolver = getContentResolver();
         mAccount = createSyncAccount(this);
-        Map<Character, Integer> map = new HashMap<>();
+        autoSyncStocks();
 
         Button checkStock = (Button)findViewById(R.id.stock_button);
 
         checkStock.setOnClickListener(stockListener);
 
     }
+
     View.OnClickListener stockListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -103,8 +104,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void autoSyncStocks(){
-        int seconds = 60;
+        //ContentResolver.requestSync(mAccount, AUTHORITY, settingsBundle);
+        ContentResolver.setSyncAutomatically(mAccount, AUTHORITY, true);
+        long seconds = 20;
         ContentResolver.addPeriodicSync(mAccount, AUTHORITY, Bundle.EMPTY, seconds);
+        // Pass the settings flags by inserting them in a bundle
+
     }
 
     //Initiate Realm Database

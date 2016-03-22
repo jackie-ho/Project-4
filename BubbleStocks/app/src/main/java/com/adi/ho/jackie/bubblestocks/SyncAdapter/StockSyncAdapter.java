@@ -92,6 +92,7 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
 //
 //            Log.d(TAG, "The Stock: " + stockItem.getName() + " " + stockItem.getLastPrice());
 //        }
+        System.out.println("Sync adapter running");
         Runnable runnable = new Runnable() {
             @Override
             public void run() {

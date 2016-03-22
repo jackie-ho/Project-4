@@ -3,6 +3,7 @@ package com.adi.ho.jackie.bubblestocks.SyncAdapter;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
+import android.util.Log;
 
 /**
  * Created by JHADI on 3/22/16.
@@ -22,6 +23,7 @@ public class MySyncService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
+        Log.d("MySyncService", "Binding");
         return sSyncAdapter.getSyncAdapterBinder();
     }
 }
