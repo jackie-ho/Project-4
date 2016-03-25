@@ -35,6 +35,8 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
     ContentResolver mContentResolver;
     RealmConfiguration realmConfig;
     Realm realm;
+    DBStock stock1;
+    private Context context;
 
     /**
      * Set up the sync adapter
@@ -46,10 +48,8 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
          * from the incoming Context
          */
         mContentResolver = context.getContentResolver();
-        // Create a RealmConfiguration which is to locate Realm file in package's "files" directory.
-        realmConfig = new RealmConfiguration.Builder(context).build();
-        // Get a Realm instance for this thread
-        Realm realm = Realm.getInstance(realmConfig);
+        this.context = context;
+
     }
 
     /**
@@ -72,39 +72,25 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
 
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
-//        String data = "";
-//        String[] stocks = {"AAPL", "GOOGL", "TSLA", "NFLX", "AMZN"};
-//        String urlString = "http://dev.markitondemand.com/MODApis/Api/v2/Quote/json?symbol=";
 //
-//        for (int i = 0; i < stocks.length; i++) {
-//            try {
-//                URL url = new URL(urlString + stocks[i]);
-//                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-//                connection.connect();
-//                InputStream inStream = connection.getInputStream();
-//                data = getInputData(inStream);
-//            } catch (Throwable e) {
-//                e.printStackTrace();
-//            }
-//
-//            Gson gson = new Gson();
-//            StockItem stockItem = gson.fromJson(data, StockItem.class);
-//
-//            Log.d(TAG, "The Stock: " + stockItem.getName() + " " + stockItem.getLastPrice());
-//        }
         System.out.println("Sync adapter running");
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
                 try {
-                    Stock stock = YahooFinance.get("AAPL");
+                    Stock stock = YahooFinance.get("^INDU");
                     //System.out.println(stock.toString());
                     System.out.println("price of stock is " + stock.getQuote());
                     System.out.println("s" + stock.getStats());
-                    DBStock stock1 = setStockInfo(stock);
+                    stock1 = setStockInfo(stock);
+                    // Create a RealmConfiguration which is to locate Realm file in package's "files" directory.
+                    RealmConfiguration realmConfig = new RealmConfiguration.Builder(context).build();
+                    // Get a Realm instance for this thread
+                    Realm realm = Realm.getInstance(realmConfig);
                     realm.beginTransaction();
                     realm.copyToRealm(stock1);
                     realm.commitTransaction();
+                    realm.close();
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -113,6 +99,7 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
         };
         Thread thread = new Thread(runnable);
         thread.start();
+
     }
 
     private String getInputData(InputStream inStream) throws IOException {
@@ -150,6 +137,11 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
         anyStock.setPeg(stock.getStats().getPeg().toString());
         anyStock.setPe(stock.getStats().getPe().toPlainString());
         anyStock.setEps(stock.getStats().getEps().toString());
+        //stick these in database
+        anyStock.setLastTradeTime(stock.getQuote().getLastTradeTimeStr());
+        anyStock.setChange(stock.getQuote().getChange().toString());
+        anyStock.setPercentChange(stock.getQuote().getChangeInPercent().toString());
+        stock.getQuote().getAskSize();
         return anyStock;
     }
 }

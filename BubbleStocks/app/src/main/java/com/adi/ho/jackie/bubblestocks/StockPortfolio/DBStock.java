@@ -4,12 +4,18 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
 
 /**
  * Created by JHADI on 3/22/16.
  */
 public class DBStock extends RealmObject implements Parcelable {
     private String symbol;
+    private String currentTime;
+    private String percentChange;
+    private String todaysVolume;
+    private String change;
+
     private String day;
     private String dayHigh;
     private String dayLow;
@@ -26,12 +32,18 @@ public class DBStock extends RealmObject implements Parcelable {
     private String revenue;
     private String profit;
 
+
     public DBStock(){
 
     }
 
+
     protected DBStock(Parcel in) {
         symbol = in.readString();
+        currentTime = in.readString();
+        percentChange = in.readString();
+        todaysVolume = in.readString();
+        change = in.readString();
         day = in.readString();
         dayHigh = in.readString();
         dayLow = in.readString();
@@ -188,6 +200,45 @@ public class DBStock extends RealmObject implements Parcelable {
         this.profit = profit;
     }
 
+    public String getLastTradeTime() {
+        return currentTime;
+    }
+
+    public void setLastTradeTime(String lastTradeTime) {
+        this.currentTime = lastTradeTime;
+    }
+
+    public String getCurrentTime() {
+        return currentTime;
+    }
+
+    public void setCurrentTime(String currentTime) {
+        this.currentTime = currentTime;
+    }
+
+    public String getPercentChange() {
+        return percentChange;
+    }
+
+    public void setPercentChange(String percentChange) {
+        this.percentChange = percentChange;
+    }
+
+    public String getTodaysVolume() {
+        return todaysVolume;
+    }
+
+    public void setTodaysVolume(String todaysVolume) {
+        this.todaysVolume = todaysVolume;
+    }
+
+    public String getChange() {
+        return change;
+    }
+
+    public void setChange(String change) {
+        this.change = change;
+    }
 
     @Override
     public int describeContents() {
@@ -212,5 +263,10 @@ public class DBStock extends RealmObject implements Parcelable {
         dest.writeString(marketCap);
         dest.writeString(revenue);
         dest.writeString(profit);
+        dest.writeString(currentTime);
+        dest.writeString(percentChange);
+        dest.writeString(todaysVolume);
+        dest.writeString(change);
+
     }
 }
