@@ -19,5 +19,12 @@
         android:id="@+id/stock_fragmentcontainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="?attr/actionBarSize"></FrameLayout>
+        android:layout_marginTop="?attr/actionBarSize">
+        <FrameLayout
+            android:id="@+id/marketdata_fragmentcontainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="?attr/actionBarSize"></FrameLayout>
+
+    </FrameLayout>
 </RelativeLayout>

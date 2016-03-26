@@ -31,6 +31,7 @@ public class StockDetailFragment extends Fragment {
     ArrayList<HistoricalStockQuoteWrapper> historicalStockQuoteWrappers;
     ArrayList<String> mXAxisDays;
     DBStock stockData;
+    CandleDataSet set1;
 
     @Nullable
     @Override
@@ -100,9 +101,13 @@ public class StockDetailFragment extends Fragment {
             dailyCandleData.add(new CandleEntry(index, low, high, open, close));
             index += 1;
         }
-        dailyCandleData.add(new CandleEntry(dailyCandleData.size(), Float.parseFloat(stockData.getDayLow()), Float.parseFloat(stockData.getDayHigh()),
-                Float.parseFloat(stockData.getDayOpen()), Float.parseFloat(stockData.getDayClose())));
-        CandleDataSet set1 = new CandleDataSet(dailyCandleData, "Price");
+        if (!stockData.getDayOpen().equals(String.valueOf(dailyCandleData.get(dailyCandleData.size() - 1).getOpen()))) {
+            dailyCandleData.add(new CandleEntry(dailyCandleData.size(), Float.parseFloat(stockData.getDayLow()), Float.parseFloat(stockData.getDayHigh()),
+                    Float.parseFloat(stockData.getDayOpen()), Float.parseFloat(stockData.getDayClose())));
+            set1 = new CandleDataSet(dailyCandleData, "Price");
+            int addOne = Integer.parseInt(mXAxisDays.get(dailyCandleData.size() - 2));
+            mXAxisDays.add(String.valueOf(addOne));
+        }
 
         set1.setAxisDependency(YAxis.AxisDependency.LEFT);
 //        set1.setColor(Color.rgb(80, 80, 80));

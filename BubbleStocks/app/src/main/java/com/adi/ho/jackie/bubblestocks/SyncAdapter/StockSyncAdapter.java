@@ -78,7 +78,7 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
             @Override
             public void run() {
                 try {
-                    Stock stock = YahooFinance.get("^INDU");
+                    Stock stock = YahooFinance.get("SPY");
                     //System.out.println(stock.toString());
                     System.out.println("price of stock is " + stock.getQuote());
                     System.out.println("s" + stock.getStats());

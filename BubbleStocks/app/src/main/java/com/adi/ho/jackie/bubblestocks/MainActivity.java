@@ -18,11 +18,20 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.adi.ho.jackie.bubblestocks.Fragments.MarketDataFragment;
 import com.adi.ho.jackie.bubblestocks.Fragments.StockDetailFragment;
 import com.adi.ho.jackie.bubblestocks.Fragments.StockFragment;
 import com.adi.ho.jackie.bubblestocks.HttpConnections.HttpRequests;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.DBStock;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.HistoricalStockQuoteWrapper;
+import com.adi.ho.jackie.bubblestocks.StockPortfolio.MarketData;
+import com.adi.ho.jackie.bubblestocks.oauth.TradeKingApi;
+import com.github.scribejava.core.builder.ServiceBuilder;
+import com.github.scribejava.core.model.OAuth1AccessToken;
+import com.github.scribejava.core.model.OAuthRequest;
+import com.github.scribejava.core.model.Response;
+import com.github.scribejava.core.model.Verb;
+import com.github.scribejava.core.oauth.OAuthService;
 import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
 import java.io.IOException;
@@ -30,6 +39,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -50,7 +60,13 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     public static final String ACCOUNT_TYPE = "example.com";
     // Account
     public static final String ACCOUNT = "default_account";
+    private static final String CONSUMER_KEY = "JYnluVt22VtggCnIBF7l2IdPHCYksVjSesxqmEZ3QQw0";
+    private static final String CONSUMER_SECRET = "17AAEKoz1xNG0Zpb0a2aGGDF73eugAu8gcCXyiaIfVc6";
+    private static final String OAUTH_TOKEN = "cys3k9gY0eoMMMHZc2wyjAQHrWdysb05qvPUbnTff947";
+    private static final String OAUTH_TOKEN_SECRET = "bi3ZL9zBtjdJDbld1E8yHB07e9EZSKZyStRT4jacgzY7";
 
+    private static final String PROTECTED_RESOURCE_URL = "https://api.tradeking.com/v1/market/ext/quotes.json?symbols=aapl";
+    private static final String DOWINDEX_URL = "https://www.quandl.com/api/v3/datasets/BCB/UDJIAD1.json?start_date=2013-03-24";
     private MaterialSearchView mMaterialSearchView;
 
     RealmConfiguration realmConfig;
@@ -72,15 +88,27 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         mMaterialSearchView = (MaterialSearchView) findViewById(R.id.material_searchview);
         setSupportActionBar(toolbar);
 
+        /*  Oauth permission for Tradeking
+        *
+        *
+         */
+//        OAuthService service = new ServiceBuilder()
+//                .apiKey(CONSUMER_KEY)
+//                .apiSecret(CONSUMER_SECRET)
+//                .build(new TradeKingApi());
+//        OAuth1AccessToken accessToken = new OAuth1AccessToken(OAUTH_TOKEN, OAUTH_TOKEN_SECRET);
+//
+//        OAuthRequest request = new OAuthRequest(Verb.GET, PROTECTED_RESOURCE_URL,service);
+//        Response response = request.send();
+//        System.out.println(response.getBody());
 
-        StockFragment stockFragment = new StockFragment();
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction stockTransaction = fragmentManager.beginTransaction();
-//            Bundle stockBundle = new Bundle();
-//            stockBundle.putParcelable(stock1.getSymbol(), stock1);
-//            stockFragment.setArguments(stockBundle);
 
-        stockTransaction.replace(R.id.stock_fragmentcontainer, stockFragment).commit();
+        //Initial screen
+//        StockFragment stockFragment = new StockFragment();
+//        FragmentManager fragmentManager = getSupportFragmentManager();
+//        FragmentTransaction stockTransaction = fragmentManager.beginTransaction();
+//        stockTransaction.replace(R.id.stock_fragmentcontainer, stockFragment).commit();
+        getMarketData();
 
         //Search for stocks
         mMaterialSearchView.setOnQueryTextListener(new MaterialSearchView.OnQueryTextListener() {
@@ -191,7 +219,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         try {
             parcelingStock = setStockInfo(searchedStock);
             for (HistoricalQuote historicalQuote : searchedStock.getHistory(lastSixMonths, yesterday, Interval.DAILY)) {
-                historicalQuoteList.add(new HistoricalStockQuoteWrapper(historicalQuote));
+                historicalQuoteList.add(0,new HistoricalStockQuoteWrapper(historicalQuote));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -237,4 +265,44 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         return anyStock;
     }
 
+    public void getMarketData(){
+        Runnable runnable = new Runnable() {
+            ArrayList<MarketData> historicalMarketDataList = new ArrayList<>();
+            List<HistoricalQuote> historicalMarket = new ArrayList<>();
+            @Override
+            public void run() {
+                try {
+                    Calendar lastTwoMonths = Calendar.getInstance();
+                    Calendar yesterday = Calendar.getInstance();
+                    Stock marketStock = YahooFinance.get("SPY", true);
+                    lastTwoMonths.add(Calendar.MONTH, -2);
+
+                    historicalMarket = marketStock.getHistory(lastTwoMonths,yesterday,Interval.DAILY);
+                    for (int i = 0 ; i < historicalMarket.size(); i++){
+                        MarketData marketData = new MarketData();
+                        marketData.setPrice(historicalMarket.get(i).getClose().toString());
+                        marketData.setIndex(historicalMarket.get(i).getSymbol().toString());
+                        historicalMarketDataList.add(0, marketData);
+                    }
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    if (!historicalMarketDataList.isEmpty() && historicalMarketDataList != null ){
+                       MarketDataFragment marketDataFragment = new MarketDataFragment();
+                        FragmentManager fragmentManager = getSupportFragmentManager();
+                        FragmentTransaction marketDataTransaction = fragmentManager.beginTransaction();
+                        Bundle stockBundle = new Bundle();
+                        stockBundle.putParcelableArrayList("MARKETDATA", historicalMarketDataList);
+                        marketDataFragment.setArguments(stockBundle);
+                        marketDataTransaction.replace(R.id.marketdata_fragmentcontainer, marketDataFragment).addToBackStack(null).commit();
+                    }
+                }
+            }
+        };
+
+        Thread marketThread = new Thread(runnable);
+        marketThread.start();
+
+    }
 }

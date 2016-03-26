@@ -7,21 +7,9 @@
 
     <!-- TODO: Update blank fragment layout -->
     <!--put this in a listview?-->
-    <TextView
+    <ListView
+        android:id="@+id/marketListView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
-    <com.github.mikephil.charting.charts.LineChart
-        android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:id="@+id/dow_linechart"></com.github.mikephil.charting.charts.LineChart>
-    <com.github.mikephil.charting.charts.LineChart
-        android:id="@+id/standardandpoor_linechart"
-        android:layout_width="match_parent"
-        android:layout_height="300dp"></com.github.mikephil.charting.charts.LineChart>
-    <com.github.mikephil.charting.charts.LineChart
-        android:id="@+id/nyse_linechart"
-        android:layout_width="match_parent"
-        android:layout_height="300dp"></com.github.mikephil.charting.charts.LineChart>
+        android:layout_height="match_parent"></ListView>
 
 </LinearLayout>
