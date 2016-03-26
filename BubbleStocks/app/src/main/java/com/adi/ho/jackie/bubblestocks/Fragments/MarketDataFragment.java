@@ -26,8 +26,13 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.github.mikephil.charting.utils.Utils;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.LinkedList;
 import java.util.List;
 
 
@@ -37,6 +42,11 @@ public class MarketDataFragment extends Fragment {
     private ArrayList<Float> marketPriceArrayList;
     private  ArrayList<ChartItem> mChartListItem;
     private ListView mMarketDataListView;
+    private LineChart mSPYChart;
+    private String mDowIndexAvgJson;
+    private String dowName;
+    private ArrayList<String> mThreeMonthsDates;
+    private LinkedList<Double> mDowMarketPriceArray;
 
     @Nullable
     @Override
@@ -50,13 +60,31 @@ public class MarketDataFragment extends Fragment {
         //Get Arguments
         marketDataArrayList = new ArrayList<>();
         marketPriceArrayList = new ArrayList<>();
+        mDowMarketPriceArray = new LinkedList<>();
+        mThreeMonthsDates = new ArrayList<>();
         Bundle marketDataBundleArguments = getArguments();
         marketDataArrayList = marketDataBundleArguments.getParcelableArrayList("MARKETDATA");
-        if (! marketDataArrayList.isEmpty()){
+        mDowIndexAvgJson = marketDataBundleArguments.getString("DOW");
+        if (! marketDataArrayList.isEmpty() && mDowIndexAvgJson != null){
             for (int i = 0 ; i <marketDataArrayList.size();i++){
-                marketPriceArrayList.add(Float.parseFloat(marketDataArrayList.get(i).getPrice()));
+                marketPriceArrayList.add(0,Float.parseFloat(marketDataArrayList.get(i).getPrice()));
+                Log.i("MARKETDATA", "Price of SPy: "+marketDataArrayList.get(i).getPrice());
+            }
+            try {
+                JSONObject dowJsonObject = new JSONObject(mDowIndexAvgJson);
+                JSONObject dowDatasetJsonObject = dowJsonObject.getJSONObject("dataset");
+                dowName = dowDatasetJsonObject.getString("name");
+                JSONArray dowDataJson = dowDatasetJsonObject.getJSONArray("data");
+                for (int i = 0; i < 100;i++){
+                    JSONArray dowDataWithDataAndPrice = (JSONArray) dowDataJson.get(i);
+                    mDowMarketPriceArray.add((Double)dowDataWithDataAndPrice.get(1));
+                    mThreeMonthsDates.add(0,(String)dowDataWithDataAndPrice.get(0));
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
             Log.i("MARKETDATA", "Size of price array list: "+ marketPriceArrayList.size());
+            Log.i("MARKETDATA", "Size of date array list: "+ mThreeMonthsDates.size());
         }
         return view;
     }
@@ -64,8 +92,16 @@ public class MarketDataFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        ArrayList<Float> floatPricesDow = new ArrayList<>();
+        //Convert ArrayList ofDouble to Float
+        for (Double price: mDowMarketPriceArray) {
+            floatPricesDow.add(0,price.floatValue());
+        }
+        floatPricesDow.size();
+        mThreeMonthsDates.size();
 
-        mChartListItem.add(new LineChartItem(generateDataLine(marketPriceArrayList),getActivity()));
+        mChartListItem.add(new LineChartItem(generateDataLine(marketPriceArrayList), getActivity()));
+        mChartListItem.add(new LineChartItem(generateDataLine(floatPricesDow),getActivity()));
         mMarketDataListView.setAdapter(new ChartDataAdapter(getActivity(),mChartListItem));
 
     }
@@ -88,7 +124,7 @@ public class MarketDataFragment extends Fragment {
 
         @Override
         public int getViewTypeCount() {
-            return 1; // we have 3 different item-types
+            return 2; // we have 3 different item-types
         }
     }
 
@@ -96,12 +132,12 @@ public class MarketDataFragment extends Fragment {
 
         ArrayList<Entry> e1 = new ArrayList<Entry>();
         for (int i = 0; i < marketPriceArrayList.size(); i++) {
-            e1.add(new Entry(marketPriceArrayList.get(0),i));
+            e1.add(new Entry(marketPriceArrayList.get(i),i));
         }
 
         LineDataSet d1 = new LineDataSet(e1, "SPY");
         d1.setLineWidth(2.5f);
-        d1.setCircleRadius(4.5f);
+    //    d1.setCircleRadius(4.5f);
         d1.setHighLightColor(Color.rgb(244, 117, 117));
         d1.setDrawValues(false);
 
@@ -123,14 +159,19 @@ public class MarketDataFragment extends Fragment {
         sets.add(d1);
         //sets.add(d2);
 
-        LineData cd = new LineData(getMonths(), sets);
+
+        LineData cd = new LineData(getMonths(marketPriceArrayList), sets);
         return cd;
     }
 
-    private ArrayList<String> getMonths() {
+    private ArrayList<String> getMonths(ArrayList<Float> xValuesSize) {
         ArrayList<String> months = new ArrayList<>();
-        for (int j = 0 ; j<marketPriceArrayList.size();j++){
-            months.add(String.valueOf(j));
+        if (xValuesSize.size() == marketPriceArrayList.size()){
+            for (int j = 0 ; j<marketPriceArrayList.size();j++){
+                months.add(String.valueOf(j));
+            }
+        } else if (xValuesSize.size() == mDowMarketPriceArray.size()){
+            return mThreeMonthsDates;
         }
         return months;
     }

@@ -9,12 +9,13 @@ import okhttp3.Response;
 /**
  * Created by JHADI on 3/21/16.
  */
-public class HttpRequests {
+public class DowHttpRequests {
+    private static final String DOWINDEX_URL = "https://www.quandl.com/api/v3/datasets/BCB/UDJIAD1.json?start_date=";
     OkHttpClient client = new OkHttpClient();
 
-    public String run(String url) throws IOException {
+    public String run(String date) throws IOException {
         Request request = new Request.Builder()
-                .url(url)
+                .url(DOWINDEX_URL+date)
                 .build();
 
         Response response = client.newCall(request).execute();

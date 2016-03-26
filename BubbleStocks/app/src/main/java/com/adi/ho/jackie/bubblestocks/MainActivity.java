@@ -8,40 +8,28 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
 import android.widget.Toast;
 
 import com.adi.ho.jackie.bubblestocks.Fragments.MarketDataFragment;
 import com.adi.ho.jackie.bubblestocks.Fragments.StockDetailFragment;
 import com.adi.ho.jackie.bubblestocks.Fragments.StockFragment;
-import com.adi.ho.jackie.bubblestocks.HttpConnections.HttpRequests;
+import com.adi.ho.jackie.bubblestocks.HttpConnections.DowHttpRequests;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.DBStock;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.HistoricalStockQuoteWrapper;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.MarketData;
-import com.adi.ho.jackie.bubblestocks.oauth.TradeKingApi;
-import com.github.scribejava.core.builder.ServiceBuilder;
-import com.github.scribejava.core.model.OAuth1AccessToken;
-import com.github.scribejava.core.model.OAuthRequest;
-import com.github.scribejava.core.model.Response;
-import com.github.scribejava.core.model.Verb;
-import com.github.scribejava.core.oauth.OAuthService;
 import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -49,7 +37,6 @@ import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
 import yahoofinance.histquotes.HistoricalQuote;
 import yahoofinance.histquotes.Interval;
-import yahoofinance.quotes.stock.StockQuotesData;
 
 public class MainActivity extends AppCompatActivity implements StockFragment.SelectStock {
 
@@ -269,15 +256,22 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         Runnable runnable = new Runnable() {
             ArrayList<MarketData> historicalMarketDataList = new ArrayList<>();
             List<HistoricalQuote> historicalMarket = new ArrayList<>();
+            String dowIndexAvg = "";
             @Override
             public void run() {
                 try {
                     Calendar lastTwoMonths = Calendar.getInstance();
                     Calendar yesterday = Calendar.getInstance();
+                    Calendar fiveYearsAgo = Calendar.getInstance();
                     Stock marketStock = YahooFinance.get("SPY", true);
                     lastTwoMonths.add(Calendar.MONTH, -2);
+                    fiveYearsAgo.add(Calendar.YEAR,-5);
+                    String format = "yyyy-MM-dd";
+                    SimpleDateFormat sdf = new SimpleDateFormat(format, Locale.US);
+                    String fiveYearsAgoDate = sdf.format(fiveYearsAgo.getTime());
+                    dowIndexAvg = new DowHttpRequests().run(fiveYearsAgoDate); //Get down index through quandl api
 
-                    historicalMarket = marketStock.getHistory(lastTwoMonths,yesterday,Interval.DAILY);
+                    historicalMarket = marketStock.getHistory(lastTwoMonths, yesterday, Interval.DAILY);
                     for (int i = 0 ; i < historicalMarket.size(); i++){
                         MarketData marketData = new MarketData();
                         marketData.setPrice(historicalMarket.get(i).getClose().toString());
@@ -294,6 +288,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
                         FragmentTransaction marketDataTransaction = fragmentManager.beginTransaction();
                         Bundle stockBundle = new Bundle();
                         stockBundle.putParcelableArrayList("MARKETDATA", historicalMarketDataList);
+                        stockBundle.putString("DOW", dowIndexAvg);
                         marketDataFragment.setArguments(stockBundle);
                         marketDataTransaction.replace(R.id.marketdata_fragmentcontainer, marketDataFragment).addToBackStack(null).commit();
                     }
