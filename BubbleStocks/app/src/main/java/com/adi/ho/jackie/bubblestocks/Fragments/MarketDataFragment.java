@@ -40,20 +40,24 @@ public class MarketDataFragment extends Fragment {
 
     private ArrayList<MarketData> marketDataArrayList;
     private ArrayList<Float> marketPriceArrayList;
-    private  ArrayList<ChartItem> mChartListItem;
+    private ArrayList<ChartItem> mChartListItem;
     private ListView mMarketDataListView;
     private LineChart mSPYChart;
     private String mDowIndexAvgJson;
+    private String mNyseIndexAvgJson;
+    private String mNasdaqIndexAvgJson;
+    private String mSPIndexAvgJson;
     private String dowName;
     private ArrayList<String> mThreeMonthsDates;
     private LinkedList<Double> mDowMarketPriceArray;
+
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_market_data, container, false);
-        mMarketDataListView = (ListView)view.findViewById(R.id.marketListView);
+        mMarketDataListView = (ListView) view.findViewById(R.id.marketListView);
         mChartListItem = new ArrayList<>();
         Utils.init(getContext());
 
@@ -63,48 +67,50 @@ public class MarketDataFragment extends Fragment {
         mDowMarketPriceArray = new LinkedList<>();
         mThreeMonthsDates = new ArrayList<>();
         Bundle marketDataBundleArguments = getArguments();
-        marketDataArrayList = marketDataBundleArguments.getParcelableArrayList("MARKETDATA");
+        //marketDataArrayList = marketDataBundleArguments.getParcelableArrayList("MARKETDATA");
         mDowIndexAvgJson = marketDataBundleArguments.getString("DOW");
-        if (! marketDataArrayList.isEmpty() && mDowIndexAvgJson != null){
-            for (int i = 0 ; i <marketDataArrayList.size();i++){
-                marketPriceArrayList.add(0,Float.parseFloat(marketDataArrayList.get(i).getPrice()));
-                Log.i("MARKETDATA", "Price of SPy: "+marketDataArrayList.get(i).getPrice());
-            }
+        mSPIndexAvgJson = marketDataBundleArguments.getString("SP");
+        mNasdaqIndexAvgJson = marketDataBundleArguments.getString("NASDAQ");
+        mNyseIndexAvgJson = marketDataBundleArguments.getString("NYSE");
+        if (mSPIndexAvgJson!= null && mDowIndexAvgJson != null) {
+
             try {
-                JSONObject dowJsonObject = new JSONObject(mDowIndexAvgJson);
-                JSONObject dowDatasetJsonObject = dowJsonObject.getJSONObject("dataset");
-                dowName = dowDatasetJsonObject.getString("name");
-                JSONArray dowDataJson = dowDatasetJsonObject.getJSONArray("data");
-                for (int i = 0; i < 100;i++){
-                    JSONArray dowDataWithDataAndPrice = (JSONArray) dowDataJson.get(i);
-                    mDowMarketPriceArray.add((Double)dowDataWithDataAndPrice.get(1));
-                    mThreeMonthsDates.add(0,(String)dowDataWithDataAndPrice.get(0));
-                }
+//                JSONObject dowJsonObject = new JSONObject(mDowIndexAvgJson);
+//                JSONObject dowDatasetJsonObject = dowJsonObject.getJSONObject("dataset");
+//                dowName = dowDatasetJsonObject.getString("name");
+//                JSONArray dowDataJson = dowDatasetJsonObject.getJSONArray("data");
+//                for (int i = 0; i < 100; i++) {
+//                    JSONArray dowDataWithDataAndPrice = (JSONArray) dowDataJson.get(i);
+//                    mDowMarketPriceArray.add((Double) dowDataWithDataAndPrice.get(1));
+//                    mThreeMonthsDates.add(0, (String) dowDataWithDataAndPrice.get(0));
+//                }
+                mChartListItem.add(new LineChartItem(generateDataLine(convertJsonToArrayList(mDowIndexAvgJson)), getActivity()));
+                mChartListItem.add(new LineChartItem(generateDataLine(convertJsonToArrayList(mSPIndexAvgJson)), getActivity()));
+                mChartListItem.add(new LineChartItem(generateDataLine(convertJsonToArrayList(mNasdaqIndexAvgJson)), getActivity()));
+                mChartListItem.add(new LineChartItem(generateDataLine(convertJsonToArrayList(mNyseIndexAvgJson)), getActivity()));
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            Log.i("MARKETDATA", "Size of price array list: "+ marketPriceArrayList.size());
-            Log.i("MARKETDATA", "Size of date array list: "+ mThreeMonthsDates.size());
         }
         return view;
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        ArrayList<Float> floatPricesDow = new ArrayList<>();
-        //Convert ArrayList ofDouble to Float
-        for (Double price: mDowMarketPriceArray) {
-            floatPricesDow.add(0,price.floatValue());
-        }
-        floatPricesDow.size();
-        mThreeMonthsDates.size();
+    public void onStart() {
+        super.onStart();
+//        ArrayList<Float> floatPricesDow = new ArrayList<>();
+//        //Convert ArrayList ofDouble to Float
+//        for (Double price : mDowMarketPriceArray) {
+//            floatPricesDow.add(0, price.floatValue());
+//        }
+//        floatPricesDow.size();
+//        mThreeMonthsDates.size();
 
-        mChartListItem.add(new LineChartItem(generateDataLine(marketPriceArrayList), getActivity()));
-        mChartListItem.add(new LineChartItem(generateDataLine(floatPricesDow),getActivity()));
-        mMarketDataListView.setAdapter(new ChartDataAdapter(getActivity(),mChartListItem));
 
+        mMarketDataListView.setAdapter(new ChartDataAdapter(getActivity(), mChartListItem));
     }
+
     private class ChartDataAdapter extends ArrayAdapter<ChartItem> {
 
         public ChartDataAdapter(Context context, List<ChartItem> objects) {
@@ -124,7 +130,7 @@ public class MarketDataFragment extends Fragment {
 
         @Override
         public int getViewTypeCount() {
-            return 2; // we have 3 different item-types
+            return 4; // we have 3 different item-types
         }
     }
 
@@ -132,47 +138,75 @@ public class MarketDataFragment extends Fragment {
 
         ArrayList<Entry> e1 = new ArrayList<Entry>();
         for (int i = 0; i < marketPriceArrayList.size(); i++) {
-            e1.add(new Entry(marketPriceArrayList.get(i),i));
+            e1.add(new Entry(marketPriceArrayList.get(i), i));
         }
 
         LineDataSet d1 = new LineDataSet(e1, "SPY");
         d1.setLineWidth(2.5f);
-    //    d1.setCircleRadius(4.5f);
+        //    d1.setCircleRadius(4.5f);
         d1.setHighLightColor(Color.rgb(244, 117, 117));
         d1.setDrawValues(false);
 
-//        ArrayList<Entry> e2 = new ArrayList<Entry>();
-//
-//        for (int i = 0; i < 12; i++) {
-//            e2.add(new Entry(e1.get(i).getVal() - 30, i));
-//        }
-//
-//        LineDataSet d2 = new LineDataSet(e2, "New DataSet " + cnt + ", (2)");
-//        d2.setLineWidth(2.5f);
-//        d2.setCircleRadius(4.5f);
-//        d2.setHighLightColor(Color.rgb(244, 117, 117));
-//        d2.setColor(ColorTemplate.VORDIPLOM_COLORS[0]);
-//        d2.setCircleColor(ColorTemplate.VORDIPLOM_COLORS[0]);
-//        d2.setDrawValues(false);
-
         ArrayList<ILineDataSet> sets = new ArrayList<ILineDataSet>();
         sets.add(d1);
-        //sets.add(d2);
 
-
-        LineData cd = new LineData(getMonths(marketPriceArrayList), sets);
+        LineData cd = new LineData(getMonths(), sets);
         return cd;
     }
 
-    private ArrayList<String> getMonths(ArrayList<Float> xValuesSize) {
-        ArrayList<String> months = new ArrayList<>();
-        if (xValuesSize.size() == marketPriceArrayList.size()){
-            for (int j = 0 ; j<marketPriceArrayList.size();j++){
-                months.add(String.valueOf(j));
+    private ArrayList<String> getMonths() {
+       return mThreeMonthsDates;
+    }
+
+    private ArrayList<Float> convertJsonToArrayList(String json) throws JSONException {
+        LinkedList<Double> priceArray = new LinkedList<>();
+        ArrayList<Float> floatPriceArray = new ArrayList<>();
+        JSONObject jsonObject = new JSONObject(json);
+        JSONObject datasetJsonObject = jsonObject.getJSONObject("dataset");
+        String indexName = datasetJsonObject.getString("name").toLowerCase();
+        if (indexName.contains("dow")) {
+            JSONArray dowDataJson = datasetJsonObject.getJSONArray("data");
+            for (int i = 0; i < 100; i++) {
+                JSONArray dowDataWithDataAndPrice = (JSONArray) dowDataJson.get(i);
+                priceArray.add((Double) dowDataWithDataAndPrice.get(1));
+                mThreeMonthsDates.add(0, (String) dowDataWithDataAndPrice.get(0));
             }
-        } else if (xValuesSize.size() == mDowMarketPriceArray.size()){
-            return mThreeMonthsDates;
+            for (Double price : priceArray) {
+                floatPriceArray.add(0,price.floatValue());
+            }
+            return floatPriceArray;
+        } else if (indexName.contains("nyse")) {
+            JSONArray nyseDataJson = datasetJsonObject.getJSONArray("data");
+            for (int i = 0; i < 100; i++) {
+                JSONArray nyseDataWithDataAndPrice = (JSONArray) nyseDataJson.get(i);
+                priceArray.add((Double) nyseDataWithDataAndPrice.get(1));
+            }
+            for (Double price : priceArray) {
+                floatPriceArray.add(0,price.floatValue());
+            }
+            return floatPriceArray;
+        } else if (indexName.contains("s\u0026p")) {
+            JSONArray spDataJson = datasetJsonObject.getJSONArray("data");
+            for (int i = 0; i < 100; i++) {
+                JSONArray spDataWithDataAndPrice = (JSONArray) spDataJson.get(i);
+                priceArray.add((Double) spDataWithDataAndPrice.get(1));
+            }
+            for (Double price : priceArray) {
+                floatPriceArray.add(0,price.floatValue());
+            }
+            return floatPriceArray;
+        } else if (indexName.contains("nasdaq")) {
+            JSONArray nasdaqDataJson = datasetJsonObject.getJSONArray("data");
+            for (int i = 0; i < 100; i++) {
+                JSONArray nasdaqDataWithDataAndPrice = (JSONArray) nasdaqDataJson.get(i);
+                priceArray.add((Double) nasdaqDataWithDataAndPrice.get(1));
+
+            }
+            for (Double price : priceArray) {
+                floatPriceArray.add(0,price.floatValue());
+            }
+            return floatPriceArray;
         }
-        return months;
+        return null;
     }
 }

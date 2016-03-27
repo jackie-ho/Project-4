@@ -5,6 +5,7 @@ import android.graphics.Paint;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,12 +13,18 @@ import android.view.ViewGroup;
 import com.adi.ho.jackie.bubblestocks.R;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.DBStock;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.HistoricalStockQuoteWrapper;
+import com.adi.ho.jackie.bubblestocks.StockPortfolio.IntradayStockData;
 import com.github.mikephil.charting.charts.CandleStickChart;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.CandleData;
 import com.github.mikephil.charting.data.CandleDataSet;
 import com.github.mikephil.charting.data.CandleEntry;
+import com.github.mikephil.charting.interfaces.datasets.ICandleDataSet;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -32,6 +39,9 @@ public class StockDetailFragment extends Fragment {
     ArrayList<String> mXAxisDays;
     DBStock stockData;
     CandleDataSet set1;
+    private String intradayJsonData;
+    private String companyName;
+    private LinkedList<IntradayStockData> intradayStockDataLinkedList;
 
     @Nullable
     @Override
@@ -40,24 +50,26 @@ public class StockDetailFragment extends Fragment {
         mChart = (CandleStickChart) view.findViewById(R.id.stock_detail_candlestick);
         historicalStockQuoteWrappers = new ArrayList<>();
         mXAxisDays = new ArrayList<>();
+        intradayStockDataLinkedList = new LinkedList<>();
         mChart.setAutoScaleMinMaxEnabled(true);
         Bundle stockInfo = getArguments();
         if (stockInfo != null) {
             stockData = stockInfo.getParcelable("EXSTOCK");
-
+            intradayJsonData = stockInfo.getString("INTRADAY");
             historicalStockQuoteWrappers = stockInfo.getParcelableArrayList("HISTORICALQUOTE");
 
         }
         for (int i = 0; i < historicalStockQuoteWrappers.size(); i++) {
             mXAxisDays.add(String.valueOf(i));
         }
-        mChart.setBackgroundColor(Color.WHITE);
 
+
+        mChart.setBackgroundColor(Color.WHITE);
         mChart.setDescription("");
 
         // if more than 60 entries are displayed in the chart, no values will be
         // drawn
-        mChart.setMaxVisibleValueCount(60);
+        mChart.setMaxVisibleValueCount(60);//TODO:Change the max
 
         // scaling can now only be done on x- and y-axis separately
         mChart.setPinchZoom(false);
@@ -77,11 +89,7 @@ public class StockDetailFragment extends Fragment {
 
         YAxis rightAxis = mChart.getAxisRight();
         rightAxis.setEnabled(false);
-//        rightAxis.setStartAtZero(false);
-
-        // setting data
-//        mSeekBarX.setProgress(40);
-//        mSeekBarY.setProgress(100);
+mChart.invalidate();
 //
 //        mChart.getLegend().setEnabled(false);
         return view;
@@ -90,6 +98,37 @@ public class StockDetailFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+         if (intradayJsonData.length() > 0 && intradayJsonData.contains("finance_charts_json_callback")){
+             intradayJsonData = intradayJsonData.substring(30);
+             int jsonDataLength = intradayJsonData.length();
+             intradayJsonData = intradayJsonData.substring(0, jsonDataLength-2);
+
+             try {
+                 JSONObject intradayInitialObject = new JSONObject(intradayJsonData);
+                 JSONObject metaIntradayObject = intradayInitialObject.getJSONObject("meta");
+                 companyName = metaIntradayObject.optString("Company-Name", "");
+                 JSONArray intradayPricesArray = metaIntradayObject.getJSONArray("series");
+                 for(int i =0; i < intradayPricesArray.length();i++){
+                     intradayStockDataLinkedList.add(new IntradayStockData(intradayPricesArray.getJSONObject(i)));
+                 }
+                 Log.v("INTRADAY", "size of list: " +intradayStockDataLinkedList.size());
+
+             } catch (JSONException e) {
+                 e.printStackTrace();
+             }
+             fillCandleCharts();
+
+         }
+    }
+
+    private void fillCandleCharts() {
         List<CandleEntry> dailyCandleData = new LinkedList<>();
         int index = 0;
         for (HistoricalStockQuoteWrapper hist : historicalStockQuoteWrappers) {
@@ -120,8 +159,8 @@ public class StockDetailFragment extends Fragment {
         set1.setNeutralColor(Color.BLUE);
 
 
+
         CandleData candleData = new CandleData(mXAxisDays, set1);
         mChart.setData(candleData);
     }
-
 }

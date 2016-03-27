@@ -7,10 +7,10 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 /**
- * Created by JHADI on 3/21/16.
+ * Created by JHADI on 3/26/16.
  */
-public class DowHttpRequests {
-    private static final String DOWINDEX_URL = "https://www.quandl.com/api/v3/datasets/BCB/UDJIAD1.json?start_date=";
+public class SpyHttpRequests {
+    private static final String DOWINDEX_URL = "https://www.quandl.com/api/v3/datasets/YAHOO/INDEX_GSPC.json?start_date=";
     private static final String API_KEY = "HhbKySgiDH1WfqPy4xtz";
     OkHttpClient client = new OkHttpClient();
 

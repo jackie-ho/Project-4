@@ -19,6 +19,10 @@ import com.adi.ho.jackie.bubblestocks.Fragments.MarketDataFragment;
 import com.adi.ho.jackie.bubblestocks.Fragments.StockDetailFragment;
 import com.adi.ho.jackie.bubblestocks.Fragments.StockFragment;
 import com.adi.ho.jackie.bubblestocks.HttpConnections.DowHttpRequests;
+import com.adi.ho.jackie.bubblestocks.HttpConnections.IntradayMarketDataRequest;
+import com.adi.ho.jackie.bubblestocks.HttpConnections.NasdaqHttpRequest;
+import com.adi.ho.jackie.bubblestocks.HttpConnections.NyseHttpRequest;
+import com.adi.ho.jackie.bubblestocks.HttpConnections.SpyHttpRequests;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.DBStock;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.HistoricalStockQuoteWrapper;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.MarketData;
@@ -102,6 +106,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
             @Override
             public boolean onQueryTextSubmit(String query) {
                 final String stockSymbol = query;
+
                 //callStockDataFromLastHalfYear(stockSymbol);
                 Runnable searchStockRunnable = new Runnable() {
                     @Override
@@ -109,7 +114,6 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
                         Stock stockSearch = null;
                         try {
                             stockSearch = YahooFinance.get(stockSymbol);
-
                             selectedStock(stockSearch);
                             Log.i("STOCKSEARCH", "Searched for " + stockSymbol);
                         } catch (IOException e) {
@@ -201,10 +205,11 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         DBStock parcelingStock = new DBStock();
         Calendar lastSixMonths = Calendar.getInstance();
         Calendar yesterday = Calendar.getInstance();
-
+        String intradayData = "";
         lastSixMonths.add(Calendar.MONTH, -6);
         try {
             parcelingStock = setStockInfo(searchedStock);
+            intradayData = new IntradayMarketDataRequest().run(searchedStock.getSymbol());
             for (HistoricalQuote historicalQuote : searchedStock.getHistory(lastSixMonths, yesterday, Interval.DAILY)) {
                 historicalQuoteList.add(0,new HistoricalStockQuoteWrapper(historicalQuote));
             }
@@ -218,6 +223,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
                 Bundle stockBundle = new Bundle();
                 stockBundle.putParcelable("EXSTOCK", parcelingStock);
                 stockBundle.putParcelableArrayList("HISTORICALQUOTE", historicalQuoteList);
+                stockBundle.putString("INTRADAY", intradayData);
                 stockDetailFragment.setArguments(stockBundle);
                 stockTransaction.replace(R.id.stock_fragmentcontainer, stockDetailFragment).addToBackStack(null).commit();
             }
@@ -254,41 +260,39 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
 
     public void getMarketData(){
         Runnable runnable = new Runnable() {
-            ArrayList<MarketData> historicalMarketDataList = new ArrayList<>();
-            List<HistoricalQuote> historicalMarket = new ArrayList<>();
             String dowIndexAvg = "";
+            String nasdaqIndexAvg = "";
+            String spIndexAvg = "";
+            String nyseIndexAvg = "";
             @Override
             public void run() {
                 try {
-                    Calendar lastTwoMonths = Calendar.getInstance();
-                    Calendar yesterday = Calendar.getInstance();
                     Calendar fiveYearsAgo = Calendar.getInstance();
                     Stock marketStock = YahooFinance.get("SPY", true);
-                    lastTwoMonths.add(Calendar.MONTH, -2);
                     fiveYearsAgo.add(Calendar.YEAR,-5);
                     String format = "yyyy-MM-dd";
                     SimpleDateFormat sdf = new SimpleDateFormat(format, Locale.US);
                     String fiveYearsAgoDate = sdf.format(fiveYearsAgo.getTime());
-                    dowIndexAvg = new DowHttpRequests().run(fiveYearsAgoDate); //Get down index through quandl api
 
-                    historicalMarket = marketStock.getHistory(lastTwoMonths, yesterday, Interval.DAILY);
-                    for (int i = 0 ; i < historicalMarket.size(); i++){
-                        MarketData marketData = new MarketData();
-                        marketData.setPrice(historicalMarket.get(i).getClose().toString());
-                        marketData.setIndex(historicalMarket.get(i).getSymbol().toString());
-                        historicalMarketDataList.add(0, marketData);
-                    }
+                    //Get indexes through quandl api
+                    dowIndexAvg = new DowHttpRequests().run(fiveYearsAgoDate);
+                    nasdaqIndexAvg = new NasdaqHttpRequest().run(fiveYearsAgoDate);
+                    spIndexAvg = new SpyHttpRequests().run(fiveYearsAgoDate);
+                    nyseIndexAvg = new NyseHttpRequest().run(fiveYearsAgoDate);
+
 
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
-                    if (!historicalMarketDataList.isEmpty() && historicalMarketDataList != null ){
+                    if (dowIndexAvg.length() > 0 && nasdaqIndexAvg.length() > 0 && spIndexAvg.length() > 0 && nyseIndexAvg.length()>0){
                        MarketDataFragment marketDataFragment = new MarketDataFragment();
                         FragmentManager fragmentManager = getSupportFragmentManager();
                         FragmentTransaction marketDataTransaction = fragmentManager.beginTransaction();
                         Bundle stockBundle = new Bundle();
-                        stockBundle.putParcelableArrayList("MARKETDATA", historicalMarketDataList);
                         stockBundle.putString("DOW", dowIndexAvg);
+                        stockBundle.putString("NASDAQ",nasdaqIndexAvg);
+                        stockBundle.putString("SP", spIndexAvg);
+                        stockBundle.putString("NYSE",nyseIndexAvg);
                         marketDataFragment.setArguments(stockBundle);
                         marketDataTransaction.replace(R.id.marketdata_fragmentcontainer, marketDataFragment).addToBackStack(null).commit();
                     }

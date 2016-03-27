@@ -6,6 +6,8 @@
     <com.github.mikephil.charting.charts.CandleStickChart
         android:id="@+id/stock_detail_candlestick"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"></com.github.mikephil.charting.charts.CandleStickChart>
+        android:layout_height="300dp"
+        android:layout_gravity="center_vertical"></com.github.mikephil.charting.charts.CandleStickChart>
+
 
 </LinearLayout>
