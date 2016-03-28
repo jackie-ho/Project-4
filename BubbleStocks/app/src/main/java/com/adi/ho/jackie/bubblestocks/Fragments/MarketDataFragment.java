@@ -75,15 +75,6 @@ public class MarketDataFragment extends Fragment {
         if (mSPIndexAvgJson!= null && mDowIndexAvgJson != null) {
 
             try {
-//                JSONObject dowJsonObject = new JSONObject(mDowIndexAvgJson);
-//                JSONObject dowDatasetJsonObject = dowJsonObject.getJSONObject("dataset");
-//                dowName = dowDatasetJsonObject.getString("name");
-//                JSONArray dowDataJson = dowDatasetJsonObject.getJSONArray("data");
-//                for (int i = 0; i < 100; i++) {
-//                    JSONArray dowDataWithDataAndPrice = (JSONArray) dowDataJson.get(i);
-//                    mDowMarketPriceArray.add((Double) dowDataWithDataAndPrice.get(1));
-//                    mThreeMonthsDates.add(0, (String) dowDataWithDataAndPrice.get(0));
-//                }
                 mChartListItem.add(new LineChartItem(generateDataLine(convertJsonToArrayList(mDowIndexAvgJson)), getActivity()));
                 mChartListItem.add(new LineChartItem(generateDataLine(convertJsonToArrayList(mSPIndexAvgJson)), getActivity()));
                 mChartListItem.add(new LineChartItem(generateDataLine(convertJsonToArrayList(mNasdaqIndexAvgJson)), getActivity()));
@@ -99,15 +90,6 @@ public class MarketDataFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-//        ArrayList<Float> floatPricesDow = new ArrayList<>();
-//        //Convert ArrayList ofDouble to Float
-//        for (Double price : mDowMarketPriceArray) {
-//            floatPricesDow.add(0, price.floatValue());
-//        }
-//        floatPricesDow.size();
-//        mThreeMonthsDates.size();
-
-
         mMarketDataListView.setAdapter(new ChartDataAdapter(getActivity(), mChartListItem));
     }
 

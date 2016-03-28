@@ -1,13 +1,181 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-    <com.github.mikephil.charting.charts.CandleStickChart
-        android:id="@+id/stock_detail_candlestick"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:layout_gravity="center_vertical"></com.github.mikephil.charting.charts.CandleStickChart>
+        android:layout_height="match_parent"
+        android:background="#ffffff"
+        android:orientation="vertical"
+        >
 
+        <com.github.mikephil.charting.charts.CandleStickChart
+            android:id="@+id/stock_detail_3mcandlestick"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:layout_gravity="center_vertical"
+            android:animateLayoutChanges="true"></com.github.mikephil.charting.charts.CandleStickChart>
 
+        <com.github.mikephil.charting.charts.CandleStickChart
+            android:id="@+id/stock_detail_5mincandlestick"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:visibility="gone"
+            android:animateLayoutChanges="true"></com.github.mikephil.charting.charts.CandleStickChart>
+
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/stock_detail_1dlinechart"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:visibility="gone"
+            android:animateLayoutChanges="true"></com.github.mikephil.charting.charts.LineChart>
+        <com.github.mikephil.charting.charts.CombinedChart
+            android:id="@+id/stock_detail_3mcombinedchart"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:visibility="gone"
+            android:animateLayoutChanges="true"></com.github.mikephil.charting.charts.CombinedChart>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/threemonth_databutton"
+
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/buttonshape1d"
+                android:shadowColor="#A8958D"
+                android:shadowDx="3"
+                android:shadowDy="0"
+                android:shadowRadius="5"
+                android:text="3m"
+                android:textColor="#FF3C2E"
+                android:textSize="20sp" />
+
+            <Button
+                android:id="@+id/oneday_databutton"
+
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/buttonshape1d"
+
+                android:shadowColor="#A8958D"
+                android:shadowDx="3"
+                android:shadowDy="0"
+                android:shadowRadius="5"
+                android:text="1d"
+                android:textColor="#FF3C2E"
+                android:textSize="20sp" />
+        </LinearLayout>
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/stock_detail_volumetext"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5"
+                    android:text="Volume: "
+                    android:layout_gravity="left"/>
+                <TextView
+                    android:id="@+id/stock_Detail_stockmarketcaptext"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5"
+                    android:text="Market Cap: "
+                    android:layout_gravity="left"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/stock_detail_averagevolumetext"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5"
+                    android:text="Avg Volume: "
+                    android:layout_gravity="left"/>
+                <TextView
+                    android:id="@+id/stock_detail_epstext"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5"
+                    android:text="EPS: "
+                android:layout_gravity="left"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/stock_detail_52wkhightext"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5"
+                    android:text="52 Week High: "
+                    android:layout_gravity="left"/>
+                <TextView
+                    android:id="@+id/stock_detail_petext"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5"
+                    android:text="P/E: "
+                    android:layout_gravity="left"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/stock_detail_52wklowtext"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5"
+                    android:text="52 Week Low: "
+                    android:layout_gravity="left"/>
+                <TextView
+                    android:id="@+id/stock_detail_diviyieldtext"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5"
+                    android:text="Dividend Yield: "
+                    android:layout_gravity="left"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/stock_detail_stockrevenuetext"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5"
+                    android:text="Revenue: "
+                    android:layout_gravity="left"/>
+                <TextView
+                    android:id="@+id/stock_detail_stockoneyeartarget"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5"
+                    android:text="One Year Target: "
+                    android:layout_gravity="left"/>
+            </LinearLayout>
+        </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
 </LinearLayout>

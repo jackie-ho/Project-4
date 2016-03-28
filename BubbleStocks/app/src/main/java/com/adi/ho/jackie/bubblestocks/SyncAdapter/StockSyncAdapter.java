@@ -98,7 +98,7 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
             }
         };
         Thread thread = new Thread(runnable);
-        thread.start();
+     //   thread.start();
 
     }
 
@@ -128,12 +128,13 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
         anyStock.setDayOpen(stock.getQuote().getOpen().toString());
         anyStock.setDayLow(stock.getQuote().getDayLow().toString());
         anyStock.setSymbol(stock.getSymbol());
-        anyStock.setAvgVol(String.valueOf(stock.getQuote().getAvgVolume()));
+        anyStock.setAvgVol(stock.getQuote().getAvgVolume());
         anyStock.setDiviYield(stock.getDividend().getAnnualYieldPercent().toString());
-        anyStock.setMarketCap(stock.getStats().getMarketCap().toString());
+        anyStock.setMarketCap(Double.parseDouble(stock.getStats().getMarketCap().toString()));
         anyStock.setYearLow(stock.getQuote().getYearLow().toString());
         anyStock.setYearHigh(stock.getQuote().getYearHigh().toEngineeringString());
-        anyStock.setRevenue(stock.getStats().getRevenue().toString());
+        anyStock.setRevenue(Double.parseDouble(stock.getStats().getRevenue().toString()));
+        anyStock.setOneYearPriceEstimate(stock.getStats().getOneYearTargetPrice().toString());
         anyStock.setPeg(stock.getStats().getPeg().toString());
         anyStock.setPe(stock.getStats().getPe().toPlainString());
         anyStock.setEps(stock.getStats().getEps().toString());

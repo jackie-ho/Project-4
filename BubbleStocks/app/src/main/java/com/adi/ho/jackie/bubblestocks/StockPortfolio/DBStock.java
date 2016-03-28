@@ -15,7 +15,7 @@ public class DBStock extends RealmObject implements Parcelable {
     private String percentChange;
     private String todaysVolume;
     private String change;
-
+    private String oneYearPriceEstimate;
     private String day;
     private String dayHigh;
     private String dayLow;
@@ -31,9 +31,10 @@ public class DBStock extends RealmObject implements Parcelable {
     private String marketCap;
     private String revenue;
     private String profit;
+    private String avgVolBarEntries;
 
 
-    public DBStock(){
+    public DBStock() {
 
     }
 
@@ -59,6 +60,7 @@ public class DBStock extends RealmObject implements Parcelable {
         marketCap = in.readString();
         revenue = in.readString();
         profit = in.readString();
+        oneYearPriceEstimate = in.readString();
     }
 
     public static final Creator<DBStock> CREATOR = new Creator<DBStock>() {
@@ -120,6 +122,7 @@ public class DBStock extends RealmObject implements Parcelable {
     public void setDayClose(String dayClose) {
         this.dayClose = dayClose;
     }
+
     public String getYearHigh() {
         return yearHigh;
     }
@@ -148,8 +151,22 @@ public class DBStock extends RealmObject implements Parcelable {
         return avgVol;
     }
 
-    public void setAvgVol(String avgVol) {
-        this.avgVol = avgVol;
+    public void setAvgVolBarEntries(String avgVol){
+        avgVolBarEntries = avgVol;
+    }
+
+    public String getAvgVolBarEntries(){
+        return avgVolBarEntries;
+    }
+
+    public void setAvgVol(double avgVol) {
+        if (avgVol >=1000000 && avgVol < 1000000000) {
+            this.avgVol = String.format("%.2fM", avgVol / 1000000);
+        } else if (avgVol >= 1000000000){
+            this.avgVol = String.format("%.2fB", avgVol/ 1000000000);
+        } else {
+            this.avgVol = String.valueOf(avgVol);
+        }
     }
 
     public String getDiviYield() {
@@ -180,16 +197,28 @@ public class DBStock extends RealmObject implements Parcelable {
         return marketCap;
     }
 
-    public void setMarketCap(String marketCap) {
-        this.marketCap = marketCap;
+    public void setMarketCap(double marketCap) {
+        if (marketCap >=1000000 && marketCap < 1000000000) {
+            this.marketCap = String.format("%.2fM", marketCap / 1000000);
+        } else if (marketCap >= 1000000000){
+            this.marketCap = String.format("%.2fB", marketCap/ 1000000000);
+        } else {
+            this.marketCap = String.valueOf(marketCap);
+        }
     }
 
     public String getRevenue() {
         return revenue;
     }
 
-    public void setRevenue(String revenue) {
-        this.revenue = revenue;
+    public void setRevenue(double revenue) {
+        if (revenue >=1000000 && revenue < 1000000000) {
+            this.revenue = String.format("%.2fM", revenue / 1000000);
+        } else if (revenue >= 1000000000){
+            this.revenue = String.format("%.2fB", revenue/ 1000000000);
+        } else {
+            this.revenue = String.valueOf(revenue);
+        }
     }
 
     public String getProfit() {
@@ -228,8 +257,14 @@ public class DBStock extends RealmObject implements Parcelable {
         return todaysVolume;
     }
 
-    public void setTodaysVolume(String todaysVolume) {
-        this.todaysVolume = todaysVolume;
+    public void setTodaysVolume(double todaysVolume) {
+        if (todaysVolume >=1000000 && todaysVolume < 1000000000) {
+            this.todaysVolume = String.format("%.2fM", todaysVolume / 1000000);
+        } else if (todaysVolume >= 1000000000){
+            this.todaysVolume = String.format("%.2fB", todaysVolume/ 1000000000);
+        } else {
+            this.todaysVolume = String.valueOf(todaysVolume);
+        }
     }
 
     public String getChange() {
@@ -239,6 +274,10 @@ public class DBStock extends RealmObject implements Parcelable {
     public void setChange(String change) {
         this.change = change;
     }
+
+    public String getOneYearPriceEstimate(){return oneYearPriceEstimate;}
+
+    public void setOneYearPriceEstimate(String oneYearPriceEstimate){this.oneYearPriceEstimate = oneYearPriceEstimate;}
 
     @Override
     public int describeContents() {
@@ -267,6 +306,7 @@ public class DBStock extends RealmObject implements Parcelable {
         dest.writeString(percentChange);
         dest.writeString(todaysVolume);
         dest.writeString(change);
+        dest.writeString(oneYearPriceEstimate);
 
     }
 }

@@ -66,13 +66,14 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     ContentResolver mResolver;
     Toolbar toolbar;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mResolver = getContentResolver();
         mAccount = createSyncAccount(this);
-        //  autoSyncStocks();
+  //        autoSyncStocks();
 
         //Toolbar search
         toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -102,6 +103,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         getMarketData();
 
         //Search for stocks
+        mMaterialSearchView.setHint("Enter stock symbol.");
         mMaterialSearchView.setOnQueryTextListener(new MaterialSearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -124,6 +126,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
                 };
                 Thread stockSearchThread = new Thread(searchStockRunnable);
                 stockSearchThread.start();
+                mMaterialSearchView.closeSearch();
                 return true;
 
             }
@@ -168,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     private void autoSyncStocks() {
         //ContentResolver.requestSync(mAccount, AUTHORITY, settingsBundle);
         ContentResolver.setSyncAutomatically(mAccount, AUTHORITY, true);
-        long seconds = 20;
+        long seconds = 200;
         ContentResolver.addPeriodicSync(mAccount, AUTHORITY, Bundle.EMPTY, seconds);
         // Pass the settings flags by inserting them in a bundle
 
@@ -201,6 +204,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
 
     @Override
     public void selectedStock(Stock searchedStock) {
+        //Get historical data for the searched stock.
         ArrayList<HistoricalStockQuoteWrapper> historicalQuoteList = new ArrayList<>();
         DBStock parcelingStock = new DBStock();
         Calendar lastSixMonths = Calendar.getInstance();
@@ -209,14 +213,16 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         lastSixMonths.add(Calendar.MONTH, -6);
         try {
             parcelingStock = setStockInfo(searchedStock);
+            //get intraday data
             intradayData = new IntradayMarketDataRequest().run(searchedStock.getSymbol());
+            //historical data includes open,close, high, and low prices as well as volume
             for (HistoricalQuote historicalQuote : searchedStock.getHistory(lastSixMonths, yesterday, Interval.DAILY)) {
                 historicalQuoteList.add(0,new HistoricalStockQuoteWrapper(historicalQuote));
             }
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            if (parcelingStock != null && !parcelingStock.getSymbol().isEmpty() && historicalQuoteList.size() > 0) {
+            if (parcelingStock != null && parcelingStock.getSymbol() != null && historicalQuoteList.size() > 0) {
                 StockDetailFragment stockDetailFragment = new StockDetailFragment();
                 FragmentManager fragmentManager = getSupportFragmentManager();
                 FragmentTransaction stockTransaction = fragmentManager.beginTransaction();
@@ -241,15 +247,17 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         anyStock.setDayOpen(stock.getQuote().getOpen().toString());
         anyStock.setDayLow(stock.getQuote().getDayLow().toString());
         anyStock.setSymbol(stock.getSymbol());
-        anyStock.setAvgVol(String.valueOf(stock.getQuote().getAvgVolume()));
+        anyStock.setAvgVol(stock.getQuote().getAvgVolume());
         anyStock.setDiviYield(stock.getDividend().getAnnualYieldPercent().toString());
-        anyStock.setMarketCap(stock.getStats().getMarketCap().toString());
+        anyStock.setMarketCap(Double.parseDouble(stock.getStats().getMarketCap().toString()));
         anyStock.setYearLow(stock.getQuote().getYearLow().toString());
         anyStock.setYearHigh(stock.getQuote().getYearHigh().toEngineeringString());
-        anyStock.setRevenue(stock.getStats().getRevenue().toString());
+        anyStock.setRevenue(Double.parseDouble(stock.getStats().getRevenue().toString()));
+        anyStock.setOneYearPriceEstimate(stock.getStats().getOneYearTargetPrice().toString());
         anyStock.setPeg(stock.getStats().getPeg().toString());
         anyStock.setPe(stock.getStats().getPe().toPlainString());
         anyStock.setEps(stock.getStats().getEps().toString());
+        anyStock.setAvgVolBarEntries(String.valueOf(stock.getQuote().getAvgVolume()));
         //stick these in database
         anyStock.setLastTradeTime(stock.getQuote().getLastTradeTimeStr());
         anyStock.setChange(stock.getQuote().getChange().toString());
