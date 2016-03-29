@@ -3,13 +3,11 @@ package com.adi.ho.jackie.bubblestocks.StockPortfolio;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import io.realm.RealmObject;
-import io.realm.annotations.PrimaryKey;
 
 /**
  * Created by JHADI on 3/22/16.
  */
-public class DBStock extends RealmObject implements Parcelable {
+public class DBStock implements Parcelable {
     private String symbol;
     private String currentTime;
     private String percentChange;

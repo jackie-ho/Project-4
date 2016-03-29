@@ -4,11 +4,18 @@ import android.accounts.Account;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SyncResult;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.adi.ho.jackie.bubblestocks.Database.StockContentProvider;
+import com.adi.ho.jackie.bubblestocks.Database.StockDBHelper;
+import com.adi.ho.jackie.bubblestocks.HttpConnections.NasdaqIntradayHttpRequest;
+import com.adi.ho.jackie.bubblestocks.HttpConnections.SpyHttpRequests;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.DBStock;
 import com.google.gson.Gson;
 
@@ -20,9 +27,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import io.realm.Realm;
-import io.realm.RealmConfiguration;
 import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
 
@@ -33,10 +40,9 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
     // Global variables
     // Define a variable to contain a content resolver instance
     ContentResolver mContentResolver;
-    RealmConfiguration realmConfig;
-    Realm realm;
     DBStock stock1;
     private Context context;
+    String date;
 
     /**
      * Set up the sync adapter
@@ -73,24 +79,19 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
 //
+
+        ExecutorService marketThreads = Executors.newFixedThreadPool(2);
         System.out.println("Sync adapter running");
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
                 try {
-                    Stock stock = YahooFinance.get("SPY");
+                   Stock stock = YahooFinance.get("NASD");
                     //System.out.println(stock.toString());
                     System.out.println("price of stock is " + stock.getQuote());
                     System.out.println("s" + stock.getStats());
                     stock1 = setStockInfo(stock);
-                    // Create a RealmConfiguration which is to locate Realm file in package's "files" directory.
-                    RealmConfiguration realmConfig = new RealmConfiguration.Builder(context).build();
-                    // Get a Realm instance for this thread
-                    Realm realm = Realm.getInstance(realmConfig);
-                    realm.beginTransaction();
-                    realm.copyToRealm(stock1);
-                    realm.commitTransaction();
-                    realm.close();
+
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -99,23 +100,10 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
         };
         Thread thread = new Thread(runnable);
      //   thread.start();
-
+       marketThreads.execute(nasdaqRunnable);
+        marketThreads.execute(spyRunnable);
     }
 
-    private String getInputData(InputStream inStream) throws IOException {
-        StringBuilder builder = new StringBuilder();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inStream));
-
-        String data = null;
-
-        while ((data = reader.readLine()) != null) {
-            builder.append(data);
-        }
-
-        reader.close();
-
-        return builder.toString();
-    }
 
     private DBStock setStockInfo(Stock stock) {
         DBStock anyStock = new DBStock();
@@ -145,4 +133,42 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
         stock.getQuote().getAskSize();
         return anyStock;
     }
+
+    Runnable spyRunnable = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                Stock stock = YahooFinance.get("SPY");
+                String stocksymbol = "SPY";
+                String lastPrice = stock.getQuote().getPrice().toString();
+                ContentValues spyValues = new ContentValues();
+                spyValues.put(StockDBHelper.COLUMN_STOCK_PRICE, lastPrice);
+                Uri uri = Uri.parse(StockContentProvider.CONTENT_URI + "/2");
+                mContentResolver.update(uri,spyValues,StockDBHelper.COLUMN_STOCK_SYMBOL + " = ? ",new String[]{"SPY"});
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    };
+
+    Runnable nasdaqRunnable = new Runnable() {
+        String nasdaqData;
+        @Override
+        public void run() {
+            try {
+               nasdaqData = new NasdaqIntradayHttpRequest().run();
+                nasdaqData = nasdaqData.substring(nasdaqData.length()-9,nasdaqData.length()-2);
+                if (nasdaqData.contains(",")){
+                    nasdaqData = nasdaqData.substring(1);
+                }
+                Uri uri = Uri.parse(StockContentProvider.CONTENT_URI + "/1");
+                ContentValues nasdaqValues = new ContentValues();
+                nasdaqValues.put(StockDBHelper.COLUMN_STOCK_PRICE, nasdaqData);
+                mContentResolver.update(uri,nasdaqValues, StockDBHelper.COLUMN_STOCK_SYMBOL + " = ?", new String[]{"IXIC"});
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    };
 }

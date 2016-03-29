@@ -4,9 +4,21 @@
     android:layout_height="wrap_content"
     android:orientation="vertical" >
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="50dp"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/market_text"
+        android:text="Market"
+        android:textSize="20sp"
+        android:gravity="center_horizontal"/>
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/linechart"
         android:layout_width="match_parent"
-        android:layout_height="200dp" />
-
+        android:layout_height="300dp" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="50dp"/>
 </LinearLayout>

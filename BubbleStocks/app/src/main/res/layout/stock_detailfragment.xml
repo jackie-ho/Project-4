@@ -16,7 +16,8 @@
             android:layout_width="match_parent"
             android:layout_height="300dp"
             android:layout_gravity="center_vertical"
-            android:animateLayoutChanges="true"></com.github.mikephil.charting.charts.CandleStickChart>
+            android:animateLayoutChanges="true"
+            android:visibility="gone"></com.github.mikephil.charting.charts.CandleStickChart>
 
         <com.github.mikephil.charting.charts.CandleStickChart
             android:id="@+id/stock_detail_5mincandlestick"
@@ -29,7 +30,7 @@
             android:id="@+id/stock_detail_1dlinechart"
             android:layout_width="match_parent"
             android:layout_height="300dp"
-            android:visibility="gone"
+            android:visibility="visible"
             android:animateLayoutChanges="true"></com.github.mikephil.charting.charts.LineChart>
         <com.github.mikephil.charting.charts.CombinedChart
             android:id="@+id/stock_detail_3mcombinedchart"

@@ -47,7 +47,6 @@ public class MarketDataFragment extends Fragment {
     private String mNyseIndexAvgJson;
     private String mNasdaqIndexAvgJson;
     private String mSPIndexAvgJson;
-    private String dowName;
     private ArrayList<String> mThreeMonthsDates;
     private LinkedList<Double> mDowMarketPriceArray;
 
@@ -67,7 +66,7 @@ public class MarketDataFragment extends Fragment {
         mDowMarketPriceArray = new LinkedList<>();
         mThreeMonthsDates = new ArrayList<>();
         Bundle marketDataBundleArguments = getArguments();
-        //marketDataArrayList = marketDataBundleArguments.getParcelableArrayList("MARKETDATA");
+
         mDowIndexAvgJson = marketDataBundleArguments.getString("DOW");
         mSPIndexAvgJson = marketDataBundleArguments.getString("SP");
         mNasdaqIndexAvgJson = marketDataBundleArguments.getString("NASDAQ");
@@ -76,10 +75,9 @@ public class MarketDataFragment extends Fragment {
 
             try {
                 mChartListItem.add(new LineChartItem(generateDataLine(convertJsonToArrayList(mDowIndexAvgJson)), getActivity()));
-                mChartListItem.add(new LineChartItem(generateDataLine(convertJsonToArrayList(mSPIndexAvgJson)), getActivity()));
                 mChartListItem.add(new LineChartItem(generateDataLine(convertJsonToArrayList(mNasdaqIndexAvgJson)), getActivity()));
                 mChartListItem.add(new LineChartItem(generateDataLine(convertJsonToArrayList(mNyseIndexAvgJson)), getActivity()));
-
+                mChartListItem.add(new LineChartItem(generateDataLine(convertJsonToArrayList(mSPIndexAvgJson)), getActivity()));
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -123,7 +121,7 @@ public class MarketDataFragment extends Fragment {
             e1.add(new Entry(marketPriceArrayList.get(i), i));
         }
 
-        LineDataSet d1 = new LineDataSet(e1, "SPY");
+        LineDataSet d1 = new LineDataSet(e1, "");
         d1.setLineWidth(2.5f);
         //    d1.setCircleRadius(4.5f);
         d1.setHighLightColor(Color.rgb(244, 117, 117));

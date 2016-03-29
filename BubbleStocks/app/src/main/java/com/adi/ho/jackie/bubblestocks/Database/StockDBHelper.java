@@ -23,21 +23,24 @@ public class StockDBHelper extends SQLiteOpenHelper {
     public static final String COLUMN_STOCK_SYMBOL = "stock_symbol";
     public static final String COLUMN_STOCK_NAME = "stock_name";
     public static final String COLUMN_STOCK_PRICE = "price";
+    public static final String COLUMN_STOCK_TRACKED = "tracked";
+    public static final String COLUMN_STOCK_OPENPRICE = "openprice";
 
-    public static final String[] ALL_COLUMNS = new String[]{COLUMN_ID, COLUMN_STOCK_NAME, COLUMN_STOCK_SYMBOL, COLUMN_STOCK_PRICE};
 
-    public StockDBHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
-        super(context, DATABASE_NAME, factory, DATABASE_VERSION);
+    public static final String[] ALL_COLUMNS = new String[]{COLUMN_ID, COLUMN_STOCK_SYMBOL, COLUMN_STOCK_PRICE, COLUMN_STOCK_TRACKED};
+    public StockDBHelper(Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
         String CREATE_PRODUCTS_TABLE = "CREATE TABLE " +
                 TABLE_STOCKS + "("
-                + COLUMN_ID + " INTEGER PRIMARY KEY, "
+                + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + COLUMN_STOCK_SYMBOL + " TEXT, "
-                + COLUMN_STOCK_NAME + " TEXT,"
-                + COLUMN_STOCK_PRICE + " REAL)";
+                + COLUMN_STOCK_PRICE + " TEXT, "
+                + COLUMN_STOCK_OPENPRICE + " TEXT, "
+                + COLUMN_STOCK_TRACKED + " INTEGER)";
         db.execSQL(CREATE_PRODUCTS_TABLE);
     }
 
@@ -59,7 +62,8 @@ public class StockDBHelper extends SQLiteOpenHelper {
     public int updateStockById(String id, ContentValues values) {
         SQLiteDatabase db = getWritableDatabase();
 
-        int numRowsChanged = db.update(TABLE_STOCKS, values, COLUMN_ID + " = ?", new String[]{id});
+        //Id is equivalent to time of trade
+        int numRowsChanged = db.update(TABLE_STOCKS, values, COLUMN_ID + " = ? ", new String[]{id});
         db.close();
 
         return numRowsChanged;
@@ -73,11 +77,24 @@ public class StockDBHelper extends SQLiteOpenHelper {
         return cursor;
     }
 
-    public Cursor getStockById(String id) {
+    public Cursor getStockPriceChange(String id) {
         SQLiteDatabase db = getReadableDatabase();
 
-        Cursor cursor = db.query(TABLE_STOCKS, ALL_COLUMNS, COLUMN_ID + " = ?", new String[]{id}, null, null, null);
+        Cursor cursor = db.query(TABLE_STOCKS, ALL_COLUMNS, COLUMN_STOCK_PRICE +" = ? ", new String[]{id}, null, null, null);
 
+        return cursor;
+    }
+
+    public void addStockToTracked(String stockSymbol){
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_STOCK_TRACKED, 1);
+        db.update(TABLE_STOCKS, values, COLUMN_STOCK_SYMBOL + " = ? ", new String[]{stockSymbol});
+    }
+
+    public Cursor getTrackedStocks(){
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.query(TABLE_STOCKS, ALL_COLUMNS, COLUMN_STOCK_TRACKED + " = ? ", new String[]{"1"}, null,null,null);
         return cursor;
     }
 

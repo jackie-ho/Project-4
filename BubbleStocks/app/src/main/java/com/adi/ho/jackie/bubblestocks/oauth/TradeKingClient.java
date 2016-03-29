@@ -5,6 +5,7 @@ import com.github.scribejava.core.model.OAuth1AccessToken;
 import com.github.scribejava.core.model.OAuthRequest;
 import com.github.scribejava.core.model.Response;
 import com.github.scribejava.core.model.Verb;
+import com.github.scribejava.core.oauth.OAuth10aService;
 import com.github.scribejava.core.oauth.OAuthService;
 
 /**
@@ -17,9 +18,9 @@ public class TradeKingClient
     private static final String OAUTH_TOKEN = "cys3k9gY0eoMMMHZc2wyjAQHrWdysb05qvPUbnTff947";
     private static final String OAUTH_TOKEN_SECRET = "bi3ZL9zBtjdJDbld1E8yHB07e9EZSKZyStRT4jacgzY7";
 
-    private static final String PROTECTED_RESOURCE_URL = "https://api.tradeking.com/v1/member/profile.json";
+    private static final String PROTECTED_RESOURCE_URL = "https://api.tradeking.com/v1/market/news/search.xml?symbols=aapl";
 
-    public static void main(String[] args) {
+    public void run(String marketSymbol){
         OAuthService service = new ServiceBuilder()
                 .apiKey(CONSUMER_KEY)
                 .apiSecret(CONSUMER_SECRET)

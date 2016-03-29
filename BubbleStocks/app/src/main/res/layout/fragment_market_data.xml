@@ -7,9 +7,13 @@
 
     <!-- TODO: Update blank fragment layout -->
     <!--put this in a listview?-->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#ffffff">
     <ListView
         android:id="@+id/marketListView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"></ListView>
-
+    </RelativeLayout>
 </LinearLayout>

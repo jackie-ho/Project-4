@@ -34,7 +34,7 @@ public class StockContentProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        dbHelper = new StockDBHelper(getContext(), null, null, 1);
+        dbHelper = new StockDBHelper(getContext());
         return false;
     }
 
@@ -47,7 +47,7 @@ public class StockContentProvider extends ContentProvider {
 
         switch (uriType) {
             case STOCK_ID:
-                cursor = dbHelper.getStockById(uri.getLastPathSegment());
+                cursor = dbHelper.getStockPriceChange(uri.getLastPathSegment());
                 break;
             case STOCK:
                 cursor = dbHelper.getAllStocks();

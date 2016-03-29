@@ -8,6 +8,7 @@ import android.content.Context;
 import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.TextView;
 
 import com.adi.ho.jackie.bubblestocks.R;
 import com.github.mikephil.charting.charts.LineChart;
@@ -44,6 +45,7 @@ public class LineChartItem extends ChartItem {
             convertView = LayoutInflater.from(c).inflate(
                     R.layout.list_item_linechart, null);
             holder.chart = (LineChart) convertView.findViewById(R.id.linechart);
+            holder.marketText = (TextView)convertView.findViewById(R.id.market_text);
 
             convertView.setTag(holder);
 
@@ -62,14 +64,16 @@ public class LineChartItem extends ChartItem {
         xAxis.setDrawGridLines(false);
         xAxis.setDrawAxisLine(true);
 
+
         YAxis leftAxis = holder.chart.getAxisLeft();
         leftAxis.setTypeface(mTf);
         leftAxis.setLabelCount(5, false);
 
         YAxis rightAxis = holder.chart.getAxisRight();
-        rightAxis.setTypeface(mTf);
-        rightAxis.setLabelCount(5, false);
-        rightAxis.setDrawGridLines(false);
+        rightAxis.setEnabled(false);
+//        rightAxis.setTypeface(mTf);
+//        rightAxis.setLabelCount(5, false);
+//        rightAxis.setDrawGridLines(false);
 
         // set data
         holder.chart.setData((LineData) mChartData);
@@ -78,11 +82,30 @@ public class LineChartItem extends ChartItem {
         // holder.chart.invalidate();
         holder.chart.animateX(750);
 
+        //Set title
+        switch (position){
+            case 0 :
+                holder.marketText.setText("Dow Jones Industrial Average");
+                break;
+            case 1:
+                holder.marketText.setText("Nasdaq");
+                break;
+            case 2:
+                holder.marketText.setText("NYSE");
+                break;
+            case 3:
+                holder.marketText.setText("S&P 500");
+                break;
+        }
+
+
+
         return convertView;
     }
 
     private static class ViewHolder {
         LineChart chart;
+        TextView marketText;
     }
 }
 

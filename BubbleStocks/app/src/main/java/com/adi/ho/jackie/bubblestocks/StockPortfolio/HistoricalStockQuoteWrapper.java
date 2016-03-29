@@ -17,7 +17,7 @@ public class HistoricalStockQuoteWrapper extends HistoricalQuote implements Parc
     private String highPrice;
     private String openPrice;
     private String closePrice;
-    private float volume;
+    private String volume;
     private String date;
 
     public HistoricalStockQuoteWrapper(HistoricalQuote historicalQuote){
@@ -25,7 +25,7 @@ public class HistoricalStockQuoteWrapper extends HistoricalQuote implements Parc
         highPrice = historicalQuote.getHigh().toString();
         openPrice = historicalQuote.getOpen().toString();
         closePrice = historicalQuote.getClose().toString();
-        volume = historicalQuote.getVolume();
+        volume = String.valueOf(historicalQuote.getVolume());
         Date dayOfQuote = historicalQuote.getDate().getTime();
         SimpleDateFormat sdf = new SimpleDateFormat("MM-dd");
         date = sdf.format(dayOfQuote);
@@ -37,7 +37,7 @@ public class HistoricalStockQuoteWrapper extends HistoricalQuote implements Parc
         highPrice = in.readString();
         openPrice = in.readString();
         closePrice = in.readString();
-        volume = in.readFloat();
+        volume = in.readString();
         date = in.readString();
     }
 
@@ -72,7 +72,18 @@ public class HistoricalStockQuoteWrapper extends HistoricalQuote implements Parc
     public String getClosePrice() {
         return closePrice;
     }
-    public float getDayVolume(){ return volume;}
+    public float getDayVolume(){
+        //commented out until i figure how to put a string label onto the yaxis
+
+//        double todaysVolume = Double.parseDouble(volume);
+//        if (todaysVolume >=1000000 && todaysVolume < 1000000000) {
+//            volume = String.format("%.1fM", todaysVolume / 1000000);
+//        } else if (todaysVolume >= 1000000000){
+//            volume = String.format("%.1fB", todaysVolume/ 1000000000);
+//        }
+//        return Float.parseFloat(volume);
+        return Float.parseFloat(volume);
+    }
 
     @Override
     public int describeContents() {
@@ -85,7 +96,7 @@ public class HistoricalStockQuoteWrapper extends HistoricalQuote implements Parc
         dest.writeString(highPrice);
         dest.writeString(openPrice);
         dest.writeString(closePrice);
-        dest.writeFloat(volume);
+        dest.writeString(volume);
         dest.writeString(date);
     }
 

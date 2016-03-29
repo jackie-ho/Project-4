@@ -8,6 +8,8 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -61,6 +63,7 @@ public class StockDetailFragment extends Fragment {
     private String intradayJsonData;
     private String companyName;
     private LinkedList<IntradayStockData> intradayStockDataLinkedList;
+    private ArrayList<HistoricalStockQuoteWrapper> mTempHistQuoteList;
     private Button oneDayGraphButton;
     private Button threeMonthGraphButton;
     private boolean dailyChartFlag = false;
@@ -103,6 +106,8 @@ public class StockDetailFragment extends Fragment {
         historicalStockQuoteWrappers = new ArrayList<>();
         mXAxisDays = new ArrayList<>();
         intradayStockDataLinkedList = new LinkedList<>();
+        mTempHistQuoteList = new ArrayList<>();
+
         mChart.setAutoScaleMinMaxEnabled(true);
         Bundle stockInfo = getArguments();
         if (stockInfo != null) {
@@ -132,6 +137,7 @@ public class StockDetailFragment extends Fragment {
     public void onStart() {
         super.onStart();
 
+        //Get intraday data
         if (intradayJsonData.length() > 0 && intradayJsonData.contains("finance_charts_json_callback")) {
             intradayJsonData = intradayJsonData.substring(30);
             int jsonDataLength = intradayJsonData.length();
@@ -141,6 +147,7 @@ public class StockDetailFragment extends Fragment {
                 JSONObject intradayInitialObject = new JSONObject(intradayJsonData);
                 JSONObject metaIntradayObject = intradayInitialObject.getJSONObject("meta");
                 companyName = metaIntradayObject.optString("Company-Name", "");
+
                 JSONArray intradayPricesArray = intradayInitialObject.getJSONArray("series");
                 for (int i = 0; i < intradayPricesArray.length(); i++) {
                     intradayStockDataLinkedList.add(new IntradayStockData(intradayPricesArray.getJSONObject(i)));
@@ -150,7 +157,8 @@ public class StockDetailFragment extends Fragment {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            fillCandleCharts();
+            setUpDailyChart();
+            setVolume();
 
         }
     }
@@ -246,6 +254,12 @@ public class StockDetailFragment extends Fragment {
 
         CombinedData data = new CombinedData(getPastThreeMonths());
 
+        //Temporarily store historical data for easier transition to graph data
+        int counter = historicalStockQuoteWrappers.size()-1;
+        while (mTempHistQuoteList.size() <59){
+            mTempHistQuoteList.add(0, historicalStockQuoteWrappers.get(counter));
+            counter--;
+        }
         data.setData(getPastThreeMonthsVolume());
         data.setData(getPastThreeMonthsPrices());
         mCombinedThreeMChart.setData(data);
@@ -263,48 +277,7 @@ public class StockDetailFragment extends Fragment {
                 mCombinedThreeMChart.setVisibility(View.GONE);
 
                 if (dailyChartFlag == false) {
-                    mDailyChart.setDescription("");
-                    // enable touch gestures
-                    mDailyChart.setTouchEnabled(true);
-                    // disable scaling and dragging
-                    mDailyChart.setDragEnabled(false);
-                    mDailyChart.setScaleEnabled(true);
-                    mDailyChart.setPinchZoom(true);
-
-                    //add entries to the graph
-                    ArrayList<Entry> dailyEntries = new ArrayList<>();
-                    ArrayList<String> timeStampList = new ArrayList<>();
-                    for (int j = 0; j < intradayStockDataLinkedList.size(); j++) {
-                        dailyEntries.add(new Entry(Float.parseFloat(intradayStockDataLinkedList.get(j).getClosePrice()), j));
-                        timeStampList.add(intradayStockDataLinkedList.get(j).getTimestamp());
-                    }
-
-                    //set graph properties
-                    LineDataSet intradayDataSet = new LineDataSet(dailyEntries, "Daily");
-                    intradayDataSet.setLineWidth(2.5f);
-                    intradayDataSet.setHighLightColor(Color.rgb(244, 117, 117));
-                    intradayDataSet.setColor(ColorTemplate.VORDIPLOM_COLORS[0]);
-                    intradayDataSet.setCircleColor(ColorTemplate.VORDIPLOM_COLORS[0]);
-                    intradayDataSet.setDrawValues(false);
-
-                    //Add open price line
-                    Typeface tf = Typeface.createFromAsset(getContext().getAssets(), "OpenSans-Regular.ttf");
-
-                    LimitLine ll1 = new LimitLine(Float.parseFloat(intradayStockDataLinkedList.get(0).getOpenPrice()), "");
-                    ll1.setLineWidth(4f);
-                    ll1.enableDashedLine(10f, 10f, 0f);
-                    ll1.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_TOP);
-                    ll1.setTextSize(10f);
-                    ll1.setTypeface(tf);
-                    ll1.setLabel("Previous close: $" + intradayStockDataLinkedList.get(0).getOpenPrice());
-
-                    YAxis leftAxis = mDailyChart.getAxisLeft();
-                    leftAxis.removeAllLimitLines(); // reset all limit lines to avoid overlapping lines
-                    leftAxis.addLimitLine(ll1);
-                    leftAxis.setDrawLimitLinesBehindData(true);
-
-                    LineData intradayLinedata = new LineData(timeStampList, intradayDataSet);
-                    mDailyChart.setData(intradayLinedata);
+                  setUpDailyChart();
                 } else {
                 }
             }
@@ -336,6 +309,7 @@ public class StockDetailFragment extends Fragment {
                 counter -=1;
             }
             threeMonthList.add(stockData.getDay());
+
         }
         return threeMonthList;
     }
@@ -345,22 +319,25 @@ public class StockDetailFragment extends Fragment {
 
         ArrayList<BarEntry> entries = new ArrayList<BarEntry>();
 
-        if (historicalStockQuoteWrappers.size() > 0) {
-            int counter = historicalStockQuoteWrappers.size();
-            int index = 0;
-            while (entries.size() < 59) {
-                //Don't add to index 0 or bars will disappear upon pinch zoom
-                entries.add(new BarEntry(historicalStockQuoteWrappers.get(counter - 1).getDayVolume(), index));
-                counter -= 1;
-                index++;
+        if (mTempHistQuoteList.size() > 0) {
+//            int counter = historicalStockQuoteWrappers.size();
+//            int index = 0;
+//            while (entries.size() < 59) {
+//                //Don't add to index 0 or bars will disappear upon pinch zoom
+//                entries.add(new BarEntry(historicalStockQuoteWrappers.get(counter - 1).getDayVolume(), index));
+//                counter -= 1;
+//                index++;
+//            }
+            for (int j = 0; j<mTempHistQuoteList.size() ; j++){
+                entries.add(new BarEntry(mTempHistQuoteList.get(j).getDayVolume(),j));
             }
-
             entries.add(new BarEntry(Float.parseFloat(stockData.getAvgVolBarEntries()), 60));
         }
         BarDataSet set = new BarDataSet(entries, "Volume");
         set.setColor(Color.rgb(60, 220, 78));
         set.setValueTextColor(Color.rgb(60, 220, 78));
         set.setValueTextSize(10f);
+
         set.setDrawValues(false);
 
         volumeData.addDataSet(set);
@@ -372,22 +349,23 @@ public class StockDetailFragment extends Fragment {
     private CandleData getPastThreeMonthsPrices(){
         List<CandleEntry> dailyCandleData = new LinkedList<>();
         int index = 0;
-        int counter = historicalStockQuoteWrappers.size()-1;
         while (dailyCandleData.size() < 59) {
-            float low = Float.parseFloat(historicalStockQuoteWrappers.get(counter).getLowPrice());
-            float high = Float.parseFloat(historicalStockQuoteWrappers.get(counter).getHighPrice());
-            float open = Float.parseFloat(historicalStockQuoteWrappers.get(counter).getOpenPrice());
-            float close = Float.parseFloat(historicalStockQuoteWrappers.get(counter).getClosePrice());
+            float low = Float.parseFloat(mTempHistQuoteList.get(index).getLowPrice());
+            float high = Float.parseFloat(mTempHistQuoteList.get(index).getHighPrice());
+            float open = Float.parseFloat(mTempHistQuoteList.get(index).getOpenPrice());
+            float close = Float.parseFloat(mTempHistQuoteList.get(index).getClosePrice());
 
             dailyCandleData.add(new CandleEntry(index, low, high, open, close));
             index++;
-            counter--;
         }
+
+        //Set minimum values for price and volume axis
         mPriceAxis = mCombinedThreeMChart.getAxisLeft();
+        YAxis volumeAxis = mCombinedThreeMChart.getAxisRight();
         float minPrice = (Float.parseFloat(Collections.min(historicalStockQuoteWrappers).getClosePrice()));
         if (minPrice <= 20){
             mPriceAxis.setAxisMinValue(0f);
-
+            volumeAxis.setAxisMinValue(0f);
         } else if (minPrice <= 100 && minPrice > 20){
             mPriceAxis.setAxisMinValue(minPrice-10);
         } else if (minPrice <= 300 && minPrice >100){
@@ -434,5 +412,78 @@ public class StockDetailFragment extends Fragment {
             mPE.setText("PE: -");
         }
         mMarketCap.setText("Market Cap: $"+stockData.getMarketCap());
+
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.stockdetail_menu, menu);
+    }
+
+    //Daily intraday data
+    private void setUpDailyChart(){
+        mDailyChart.setDescription("");
+        // enable touch gestures
+        mDailyChart.setTouchEnabled(true);
+        // disable scaling and dragging
+        mDailyChart.setDragEnabled(false);
+        mDailyChart.setScaleEnabled(true);
+        mDailyChart.setPinchZoom(true);
+
+        //add entries to the graph
+        ArrayList<Entry> dailyEntries = new ArrayList<>();
+        ArrayList<String> timeStampList = new ArrayList<>();
+        for (int j = 0; j < intradayStockDataLinkedList.size(); j++) {
+            dailyEntries.add(new Entry(Float.parseFloat(intradayStockDataLinkedList.get(j).getClosePrice()), j));
+            timeStampList.add(intradayStockDataLinkedList.get(j).getTimestamp());
+        }
+
+        //set graph properties
+        LineDataSet intradayDataSet = new LineDataSet(dailyEntries, "Daily");
+        intradayDataSet.setLineWidth(2.5f);
+        intradayDataSet.setHighLightColor(Color.rgb(244, 117, 117));
+        intradayDataSet.setColor(ColorTemplate.VORDIPLOM_COLORS[0]);
+        intradayDataSet.setCircleColor(ColorTemplate.VORDIPLOM_COLORS[0]);
+        intradayDataSet.setDrawValues(false);
+
+        //Add open price line
+        Typeface tf = Typeface.createFromAsset(getContext().getAssets(), "OpenSans-Regular.ttf");
+
+        LimitLine ll1 = new LimitLine(Float.parseFloat(intradayStockDataLinkedList.get(0).getOpenPrice()), "");
+        ll1.setLineWidth(4f);
+        ll1.enableDashedLine(10f, 10f, 0f);
+        ll1.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_TOP);
+        ll1.setTextSize(10f);
+        ll1.setTypeface(tf);
+        ll1.setLabel("Previous close: $" + intradayStockDataLinkedList.get(0).getOpenPrice());
+
+        YAxis leftAxis = mDailyChart.getAxisLeft();
+        leftAxis.removeAllLimitLines(); // reset all limit lines to avoid overlapping lines
+        leftAxis.addLimitLine(ll1);
+        leftAxis.setDrawLimitLinesBehindData(true);
+
+        LineData intradayLinedata = new LineData(timeStampList, intradayDataSet);
+        mDailyChart.setData(intradayLinedata);
+    }
+
+    //Separate since intraday data is called from onStart()
+    private void setVolume(){
+        double totalVolume = 0;
+        String todaysVolume="";
+        if (intradayStockDataLinkedList.size()> 0) {
+            for (IntradayStockData intradayStockData : intradayStockDataLinkedList) {
+                totalVolume += Long.parseLong(intradayStockData.getVolume());
+            }
+            if (totalVolume >=1000000 && totalVolume < 1000000000) {
+                todaysVolume = String.format("%.2fM", totalVolume / 1000000);
+            } else if (totalVolume >= 1000000000){
+                todaysVolume = String.format("%.2fB", totalVolume/ 1000000000);
+            } else {
+                todaysVolume = String.valueOf(totalVolume);
+            }
+
+            mVol.setText("Volume: " + todaysVolume);
+        }
     }
 }
