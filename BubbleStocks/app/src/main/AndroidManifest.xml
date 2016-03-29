@@ -2,14 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.adi.ho.jackie.bubblestocks">
 
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission
-        android:name="android.permission.READ_SYNC_SETTINGS"/>
-    <uses-permission
-        android:name="android.permission.WRITE_SYNC_SETTINGS"/>
-    <uses-permission
-        android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
+    <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -23,33 +21,34 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service
-            android:name="com.adi.ho.jackie.bubblestocks.Authenticator.AuthenticatorService">
+
+        <service android:name=".Authenticator.AuthenticatorService">
             <intent-filter>
-                <action android:name="android.accounts.AccountAuthenticator"/>
+                <action android:name="android.accounts.AccountAuthenticator" />
             </intent-filter>
+
             <meta-data
                 android:name="android.accounts.AccountAuthenticator"
                 android:resource="@xml/authenticator" />
         </service>
-
-        <service
-            android:name="com.adi.ho.jackie.bubblestocks.SyncAdapter.MySyncService"
-            >
+        <service android:name=".SyncAdapter.MySyncService">
             <intent-filter>
-                <action android:name="android.content.SyncAdapter"/>
+                <action android:name="android.content.SyncAdapter" />
             </intent-filter>
+
             <meta-data
                 android:name="android.content.SyncAdapter"
                 android:resource="@xml/syncadapter" />
         </service>
 
         <provider
-            android:name="com.adi.ho.jackie.bubblestocks.Database.StockContentProvider"
+            android:name=".Database.StockContentProvider"
             android:authorities="com.adi.ho.jackie.bubblestocks.Database.StockContentProvider"
-            android:label="my provider"
             android:exported="false"
-            android:syncable="true"/>
+            android:label="my provider"
+            android:syncable="true" />
+
+        <activity android:name=".Activities.ArticleActivity"></activity>
     </application>
 
 </manifest>

@@ -31,6 +31,7 @@ import com.adi.ho.jackie.bubblestocks.Database.StockDBHelper;
 import com.adi.ho.jackie.bubblestocks.Fragments.MarketDataFragment;
 import com.adi.ho.jackie.bubblestocks.Fragments.StockDetailFragment;
 import com.adi.ho.jackie.bubblestocks.Fragments.StockFragment;
+import com.adi.ho.jackie.bubblestocks.Fragments.TopNewsFragment;
 import com.adi.ho.jackie.bubblestocks.HttpConnections.DowHttpRequests;
 import com.adi.ho.jackie.bubblestocks.HttpConnections.IntradayMarketDataRequest;
 import com.adi.ho.jackie.bubblestocks.HttpConnections.NasdaqHttpRequest;
@@ -435,6 +436,10 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
             case 1:
                 Toast.makeText(MainActivity.this, "News", Toast.LENGTH_SHORT).show();
                 mMainNavigationTool.animateXY(3400, 3400, Easing.EasingOption.EaseOutCubic, Easing.EasingOption.EaseOutCubic);
+                TopNewsFragment topNewsFragment = new TopNewsFragment();
+                FragmentManager fragmentManager = getSupportFragmentManager();
+                FragmentTransaction newsFragmentTransaction = fragmentManager.beginTransaction();
+                newsFragmentTransaction.replace(R.id.topnews_fragmentcontainer, topNewsFragment).addToBackStack(null).commit();
                 break;
             case 2:
                 getMarketData();
