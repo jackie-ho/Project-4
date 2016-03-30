@@ -1,5 +1,6 @@
 package com.adi.ho.jackie.bubblestocks.Fragments;
 
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
@@ -18,6 +19,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.adi.ho.jackie.bubblestocks.Database.StockContentProvider;
+import com.adi.ho.jackie.bubblestocks.Database.StockDBHelper;
 import com.adi.ho.jackie.bubblestocks.R;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.DBStock;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.HistoricalStockQuoteWrapper;
@@ -84,6 +87,8 @@ public class StockDetailFragment extends Fragment {
     private TextView mCompanyNameText;
     private YAxis mPriceAxis;
     private ImageView mArrowIcon;
+    public TextView mPriceText;
+
 
     @Nullable
     @Override
@@ -91,6 +96,7 @@ public class StockDetailFragment extends Fragment {
         View view = inflater.inflate(R.layout.stock_detailfragment, container, false);
 
         //References
+        mPriceText = (TextView)view.findViewById(R.id.stock_detail_currentpricetext);
         mArrowIcon = (ImageView)view.findViewById(R.id.stock_detail_arrowicon);
         mStockTicker = (TextView)view.findViewById(R.id.stock_detail_ticker);
         mCompanyNameText = (TextView)view.findViewById(R.id.stock_detail_companyname);
@@ -155,7 +161,7 @@ public class StockDetailFragment extends Fragment {
                 JSONObject intradayInitialObject = new JSONObject(intradayJsonData);
                 JSONObject metaIntradayObject = intradayInitialObject.getJSONObject("meta");
                 companyName = metaIntradayObject.optString("Company-Name", "");
-                mCompanyNameText.setText("("+stockData.getSymbol().toUpperCase()+")"+companyName+" - ");
+                mCompanyNameText.setText("("+stockData.getSymbol().toUpperCase()+") "+companyName+" - ");
 
                 JSONArray intradayPricesArray = intradayInitialObject.getJSONArray("series");
                 for (int i = 0; i < intradayPricesArray.length(); i++) {
@@ -417,12 +423,14 @@ public class StockDetailFragment extends Fragment {
         }
         mMarketCap.setText("Market Cap: $"+stockData.getMarketCap());
         if (Double.parseDouble(stockData.getDayClose()) > Double.parseDouble(stockData.getDayOpen()) ){
-            mStockTicker.setText("$"+stockData.getDayClose()+" +$"+ stockData.getChange() +" +"
+            mStockTicker.setText("$"+ stockData.getChange() +" +"
                     + stockData.getPercentChange()+"%" );
+            mPriceText.setText("$"+stockData.getDayClose());
             mArrowIcon.setImageResource(R.drawable.arrow_up3);
         } else if (Double.parseDouble(stockData.getDayClose()) < Double.parseDouble(stockData.getDayOpen()) ){
             mStockTicker.setText("$"+stockData.getDayClose()+" -$"+ stockData.getChange() +" -"
                     + stockData.getPercentChange()+"%" );
+            mPriceText.setText("$"+stockData.getDayClose());
             mArrowIcon.setImageResource(R.drawable.arrow_down3);
         } else {
 
@@ -505,6 +513,20 @@ public class StockDetailFragment extends Fragment {
             }
 
             mVol.setText("Volume: " + todaysVolume);
+        }
+    }
+
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Cursor cursor = getContext().getContentResolver().query(StockContentProvider.CONTENT_URI, null, StockDBHelper.COLUMN_STOCK_SYMBOL +
+        " = ?",new String[]{stockData.getSymbol().toUpperCase()}, null);
+        cursor.moveToFirst();
+        if (cursor.getCount() > 0 && cursor.getInt(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_TRACKED)) == 0){
+            getContext().getContentResolver().delete(StockContentProvider.CONTENT_URI, StockDBHelper.COLUMN_STOCK_SYMBOL + " = ? ",
+                    new String[]{stockData.getSymbol().toUpperCase()});
+            Log.i("STOCKDETAIL", "Deleted stock symbol: "+stockData.getSymbol());
         }
     }
 

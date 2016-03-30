@@ -10,6 +10,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import java.util.ArrayList;
 
@@ -54,7 +55,7 @@ public class StockDBHelper extends SQLiteOpenHelper {
 
         SQLiteDatabase db = getWritableDatabase();
         long rowId = db.insert(TABLE_STOCKS, null, values);
-        db.close();
+        Log.v("DATABASE", "Inserted stock into rowId: " + rowId);
 
         return rowId;
     }
@@ -64,7 +65,6 @@ public class StockDBHelper extends SQLiteOpenHelper {
 
         //Id is equivalent to time of trade
         int numRowsChanged = db.update(TABLE_STOCKS, values, COLUMN_ID + " = ? ", new String[]{id});
-        db.close();
 
         return numRowsChanged;
     }
@@ -73,7 +73,6 @@ public class StockDBHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
 
         Cursor cursor = db.query(TABLE_STOCKS, ALL_COLUMNS, null, null, null, null, null);
-
         return cursor;
     }
 
@@ -81,7 +80,6 @@ public class StockDBHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
 
         Cursor cursor = db.query(TABLE_STOCKS, ALL_COLUMNS, COLUMN_STOCK_PRICE +" = ? ", new String[]{id}, null, null, null);
-
         return cursor;
     }
 
@@ -96,6 +94,12 @@ public class StockDBHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = db.query(TABLE_STOCKS, ALL_COLUMNS, COLUMN_STOCK_TRACKED + " = ? ", new String[]{"1"}, null,null,null);
         return cursor;
+    }
+
+    public void deleteStock(String selection, String[] selectionArgs){
+        SQLiteDatabase db = getWritableDatabase();
+        db.delete(TABLE_STOCKS,selection,selectionArgs);
+
     }
 
 }

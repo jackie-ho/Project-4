@@ -85,6 +85,16 @@ public class StockContentProvider extends ContentProvider {
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
+        int uriType = sURIMatcher.match(uri);
+
+        switch (uriType){
+            case STOCK:
+                dbHelper.deleteStock(selection,selectionArgs);
+                Log.i(StockContentProvider.class.getName(), "Deleted "+ selectionArgs.toString());
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown URI: "+ uri);
+        }
         return 0;
     }
 

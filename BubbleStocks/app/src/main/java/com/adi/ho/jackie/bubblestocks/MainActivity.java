@@ -121,8 +121,12 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
                         Stock stockSearch = null;
                         try {
                             stockSearch = YahooFinance.get(stockSymbol);
-                            selectedStock(stockSearch);
-                            Log.i("STOCKSEARCH", "Searched for " + stockSymbol);
+                            if (stockSearch != null) {
+                                selectedStock(stockSearch);
+                                Log.i("STOCKSEARCH", "Searched for " + stockSymbol);
+                            } else {
+                                Toast.makeText(MainActivity.this, "Invalid Stock Symbol", Toast.LENGTH_SHORT).show();
+                            }
                         } catch (IOException e) {
                             e.printStackTrace();
                             Toast.makeText(MainActivity.this, "Invalid Stock Symbol", Toast.LENGTH_SHORT).show();
@@ -185,6 +189,10 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
                 ContentResolver.setSyncAutomatically(mAccount, AUTHORITY, true);
                 long seconds = 120;
                 ContentResolver.addPeriodicSync(mAccount, AUTHORITY, Bundle.EMPTY, seconds);
+            } else {
+                ContentResolver.setIsSyncable(mAccount, AUTHORITY, 0);
+                ContentResolver.cancelSync(null, null);
+                Log.d("SYNCADAPTER", "Sync canceled");
             }
         } catch (ParseException e) {
             e.printStackTrace();
@@ -226,12 +234,17 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
                 StockDetailFragment stockDetailFragment = new StockDetailFragment();
                 FragmentManager fragmentManager = getSupportFragmentManager();
                 FragmentTransaction stockTransaction = fragmentManager.beginTransaction();
+                ContentValues tempInsert = new ContentValues();
+                tempInsert.put(StockDBHelper.COLUMN_STOCK_SYMBOL, searchedStock.getSymbol().toUpperCase());
+                tempInsert.put(StockDBHelper.COLUMN_STOCK_PRICE, searchedStock.getQuote().getPrice().toString());
+                tempInsert.put(StockDBHelper.COLUMN_STOCK_TRACKED, 0);
+                getContentResolver().insert(StockContentProvider.CONTENT_URI,tempInsert);
                 Bundle stockBundle = new Bundle();
                 stockBundle.putParcelable("EXSTOCK", parcelingStock);
                 stockBundle.putParcelableArrayList("HISTORICALQUOTE", historicalQuoteList);
                 stockBundle.putString("INTRADAY", intradayData);
                 stockDetailFragment.setArguments(stockBundle);
-                stockTransaction.replace(R.id.stock_fragmentcontainer, stockDetailFragment).addToBackStack(null).commit();
+                stockTransaction.replace(R.id.stock_fragmentcontainer, stockDetailFragment).commit();
             }
         }
     }

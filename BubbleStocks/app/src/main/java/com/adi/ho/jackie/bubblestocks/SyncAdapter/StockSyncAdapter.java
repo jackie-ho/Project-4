@@ -9,7 +9,9 @@ import android.content.Context;
 import android.content.SyncResult;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.util.Log;
 
 import com.adi.ho.jackie.bubblestocks.Database.StockContentProvider;
@@ -26,7 +28,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -43,6 +47,7 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
     DBStock stock1;
     private Context context;
     String date;
+    Cursor dbCursor;
 
     /**
      * Set up the sync adapter
@@ -77,60 +82,37 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     @Override
-    public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
+    public void onPerformSync(Account account, Bundle extras, String authority, final ContentProviderClient provider, SyncResult syncResult) {
 //
-        ExecutorService marketThreads = Executors.newFixedThreadPool(2);
-        System.out.println("Sync adapter running");
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                   Stock stock = YahooFinance.get("NASD");
-                    //System.out.println(stock.toString());
-                    System.out.println("price of stock is " + stock.getQuote());
-                    System.out.println("s" + stock.getStats());
-                    stock1 = setStockInfo(stock);
-
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        int numberOfStockItems = 0;
+        List<StockSyncItem> stockPortfolioList = new ArrayList<>();
+        try {
+            dbCursor = provider.query(StockContentProvider.CONTENT_URI, null, null, null, null);
+            numberOfStockItems = dbCursor.getCount();
+            dbCursor.moveToPosition(2);
+            while (!dbCursor.isAfterLast()){
+                int id = dbCursor.getInt(dbCursor.getColumnIndex(StockDBHelper.COLUMN_ID));
+                String symbol= dbCursor.getString(dbCursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_SYMBOL));
+                        stockPortfolioList.add(new StockSyncItem(id,symbol));
+                dbCursor.moveToNext();
             }
-        };
-        Thread thread = new Thread(runnable);
-     //   thread.start();
-       marketThreads.execute(nasdaqRunnable);
-        marketThreads.execute(spyRunnable);
-    }
+
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        } finally {
+            dbCursor.close();
+            //Threadpool get market data
+            ExecutorService marketThreads = Executors.newFixedThreadPool(2);
+            marketThreads.execute(nasdaqRunnable);
+            marketThreads.execute(spyRunnable);
+            //Async task to retrieve "tracked" stocks
+            for (int i =0 ; i < stockPortfolioList.size();i++){
+                new StockQuoteRequestAsync().execute(stockPortfolioList.get(i));
+            }
+
+        }
 
 
-    private DBStock setStockInfo(Stock stock) {
-        DBStock anyStock = new DBStock();
-        SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy");
-        Calendar c = Calendar.getInstance();
-        String formattedDate = df.format(c.getTime());
-        anyStock.setDay(formattedDate);
-        anyStock.setDayClose(stock.getQuote().getPrice().toString());
-        anyStock.setDayHigh(stock.getQuote().getDayHigh().toString());
-        anyStock.setDayOpen(stock.getQuote().getOpen().toString());
-        anyStock.setDayLow(stock.getQuote().getDayLow().toString());
-        anyStock.setSymbol(stock.getSymbol());
-        anyStock.setAvgVol(stock.getQuote().getAvgVolume());
-        anyStock.setDiviYield(stock.getDividend().getAnnualYieldPercent().toString());
-        anyStock.setMarketCap(Double.parseDouble(stock.getStats().getMarketCap().toString()));
-        anyStock.setYearLow(stock.getQuote().getYearLow().toString());
-        anyStock.setYearHigh(stock.getQuote().getYearHigh().toEngineeringString());
-        anyStock.setRevenue(Double.parseDouble(stock.getStats().getRevenue().toString()));
-        anyStock.setOneYearPriceEstimate(stock.getStats().getOneYearTargetPrice().toString());
-        anyStock.setPeg(stock.getStats().getPeg().toString());
-        anyStock.setPe(stock.getStats().getPe().toPlainString());
-        anyStock.setEps(stock.getStats().getEps().toString());
-        //stick these in database
-        anyStock.setLastTradeTime(stock.getQuote().getLastTradeTimeStr());
-        anyStock.setChange(stock.getQuote().getChange().toString());
-        anyStock.setPercentChange(stock.getQuote().getChangeInPercent().toString());
-        stock.getQuote().getAskSize();
-        return anyStock;
     }
 
     Runnable spyRunnable = new Runnable() {
@@ -143,7 +125,7 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
                 ContentValues spyValues = new ContentValues();
                 spyValues.put(StockDBHelper.COLUMN_STOCK_PRICE, lastPrice);
                 Uri uri = Uri.parse(StockContentProvider.CONTENT_URI + "/2");
-                mContentResolver.update(uri,spyValues,StockDBHelper.COLUMN_STOCK_SYMBOL + " = ? ",new String[]{"SPY"});
+                mContentResolver.update(uri, spyValues, StockDBHelper.COLUMN_STOCK_SYMBOL + " = ? ", new String[]{"SPY"});
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -152,22 +134,53 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
 
     Runnable nasdaqRunnable = new Runnable() {
         String nasdaqData;
+
         @Override
         public void run() {
             try {
-               nasdaqData = new NasdaqIntradayHttpRequest().run();
-                nasdaqData = nasdaqData.substring(nasdaqData.length()-9,nasdaqData.length()-2);
-                if (nasdaqData.contains(",")){
+                nasdaqData = new NasdaqIntradayHttpRequest().run();
+                nasdaqData = nasdaqData.substring(nasdaqData.length() - 9, nasdaqData.length() - 2);
+                if (nasdaqData.contains(",")) {
                     nasdaqData = nasdaqData.substring(1);
                 }
                 Uri uri = Uri.parse(StockContentProvider.CONTENT_URI + "/1");
                 ContentValues nasdaqValues = new ContentValues();
                 nasdaqValues.put(StockDBHelper.COLUMN_STOCK_PRICE, nasdaqData);
-                mContentResolver.update(uri,nasdaqValues, StockDBHelper.COLUMN_STOCK_SYMBOL + " = ?", new String[]{"IXIC"});
+                mContentResolver.update(uri, nasdaqValues, StockDBHelper.COLUMN_STOCK_SYMBOL + " = ?", new String[]{"IXIC"});
 
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     };
+
+    private class StockQuoteRequestAsync extends AsyncTask<StockSyncItem,Void,String>{
+            Stock stock;
+             String id = "";
+        @Override
+        protected String doInBackground(StockSyncItem... params) {
+            String price = "0";
+            try {
+                stock = YahooFinance.get(params[0].getSymbol());
+                price = stock.getQuote().getPrice().toString();
+                id = String.valueOf(params[0].getId());
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                Uri uri = Uri.parse(StockContentProvider.CONTENT_URI +"/"+ id);
+                ContentValues stockValues = new ContentValues();
+                stockValues.put(StockDBHelper.COLUMN_STOCK_PRICE, stock.getQuote().getPrice().toString());
+                mContentResolver.update(uri,stockValues, StockDBHelper.COLUMN_ID + " = ? ", new String[]{id});
+            }
+            return price;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+
+        }
+    }
+
 }
