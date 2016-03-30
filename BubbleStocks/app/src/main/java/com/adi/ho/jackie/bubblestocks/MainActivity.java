@@ -54,12 +54,14 @@ import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
 import java.io.IOException;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
@@ -79,7 +81,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     Account mAccount;
     ContentResolver mResolver;
     Toolbar toolbar;
-    private ContentObserver mObserver;
+
     private PieChart mMainNavigationTool;
 
     @Override
@@ -89,30 +91,21 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         mResolver = getContentResolver();
         mAccount = createSyncAccount(this);
         //Check if database is initialized
-        Cursor cursor = mResolver.query(StockContentProvider.CONTENT_URI , null, null, null, null);
-        if (cursor.getCount()==0) {
+        Cursor cursor = mResolver.query(StockContentProvider.CONTENT_URI, null, null, null, null);
+        if (cursor.getCount() == 0) {
             initializeDatabase();
         }
-
         cursor.close();
+
+        //Sync stock and market prices
         autoSyncStocks();
-        //Register content observer
-        mObserver = new StockContentObserver(new Handler());
-        getContentResolver().registerContentObserver(StockContentProvider.CONTENT_URI,true,mObserver);
-        //Toolbar search
+
+        //Toolbar search reference
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         mMaterialSearchView = (MaterialSearchView) findViewById(R.id.material_searchview);
         mMainNavigationTool = (PieChart) findViewById(R.id.home_navigationmenu);
         setSupportActionBar(toolbar);
 
-        /*  Oauth permission for Tradeking
-         *
-         *
-         */
-
-
-        //Get data for US stock exchanges
-        //getMarketData();
 
         //Search for stocks
         mMaterialSearchView.setHint("Enter stock symbol.");
@@ -153,6 +146,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         homeNavigationMenu();
     }
 
+    //Create default account
     public static Account createSyncAccount(Context context) {
         // Create the account type and default account
         Account newAccount = new Account(
@@ -161,33 +155,40 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         AccountManager accountManager =
                 (AccountManager) context.getSystemService(
                         ACCOUNT_SERVICE);
-        /*
-         * Add the account and account type, no password or user data
-         * If successful, return the Account object, otherwise report an error.
-         */
+
         if (accountManager.addAccountExplicitly(newAccount, null, null)) {
-            /*
-             * If you don't set android:syncable="true" in
-             * in your <provider> element in the manifest,
-             * then call context.setIsSyncable(account, AUTHORITY, 1)
-             * here.
-             */
+
         } else {
-            /*
-             * The account exists or some other error occurred. Log this, report it,
-             * or handle it internally.
-             */
+
         }
         return newAccount;
     }
 
     private void autoSyncStocks() {
-        //ContentResolver.requestSync(mAccount, AUTHORITY, settingsBundle);
-        ContentResolver.setSyncAutomatically(mAccount, AUTHORITY, true);
-        long seconds = 120;
-        ContentResolver.addPeriodicSync(mAccount, AUTHORITY, Bundle.EMPTY, seconds);
-        // Pass the settings flags by inserting them in a bundle
 
+        Calendar currentTime = Calendar.getInstance();
+        currentTime.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+        SimpleDateFormat tradingTimeRange = new SimpleDateFormat("EEE, dd MMM HH:mm");
+        String dateAndTime = tradingTimeRange.format(currentTime.getTime());
+
+        //Activate or deactive syncadapter based off current time in NY
+        if (dateAndTime.contains("Sat") || dateAndTime.contains("Sun")) {
+
+            ContentResolver.setIsSyncable(mAccount, AUTHORITY, 0);
+            ContentResolver.cancelSync(null, null);
+            Log.d("SYNCADAPTER", "Sync canceled");
+
+        } else try {
+            //Check for times between 9 am - 4 pm
+            if (checkIfTradingTimeRange()) {
+                ContentResolver.setIsSyncable(mAccount, AUTHORITY, 1);
+                ContentResolver.setSyncAutomatically(mAccount, AUTHORITY, true);
+                long seconds = 120;
+                ContentResolver.addPeriodicSync(mAccount, AUTHORITY, Bundle.EMPTY, seconds);
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -197,10 +198,10 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         menuInflater.inflate(R.menu.search_menu, menu);
         MenuItem searchItem = menu.findItem(R.id.action_search);
         mMaterialSearchView.setMenuItem(searchItem);
-
         return true;
     }
 
+   //Retrieve intraday and historical data
     @Override
     public void selectedStock(Stock searchedStock) {
         //Get historical data for the searched stock.
@@ -235,6 +236,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         }
     }
 
+    // ============================Convert Stock object to Parcelable objects for fragments==========================
     private DBStock setStockInfo(Stock stock) {
         DBStock anyStock = new DBStock();
         SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy");
@@ -477,37 +479,38 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         Log.i("CONTENTPROVIDER", "Inserted spy into uri: " + uri2.toString());
 
     }
-    public class StockContentObserver extends ContentObserver {
 
-        /**
-         * Creates a content observer.
-         *
-         * @param handler The handler to run {@link #onChange} on, or null if none.
-         */
-        public StockContentObserver(Handler handler) {
-            super(handler);
-        }
+    //
+    private boolean checkIfTradingTimeRange() throws ParseException {
+        String string1 = "9";
+        SimpleDateFormat startDateTime = new SimpleDateFormat("HH");
+        Calendar calendar1 = Calendar.getInstance();
+        calendar1.getTime();
+//        calendar1.setTime(time1);
+        String startTime = startDateTime.format(startDateTime.parse(string1));
 
-        @Override
-        public void onChange(boolean selfChange, Uri uri) {
-            //do stuff on UI thread
-            Log.d(MainActivity.class.getName(), "CHANGE OBSERVED AT URI: " + uri);
-            Cursor cursor = getContentResolver().query(StockContentProvider.CONTENT_URI, null, null, null, null);
-            cursor.moveToFirst();
-            while (!cursor.isAfterLast()) {
-                String price = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_PRICE));
-                Log.i("CONTENTOBSERVER", "New Price is: "+price);
-                cursor.moveToNext();
-            } cursor.close();
+        String string2 = "16";
+        SimpleDateFormat endDateTime = new SimpleDateFormat("HH");
+        Calendar calendar2 = Calendar.getInstance();
+        calendar2.getTime();
+//        calendar2.setTime(time2);
+        String endTime = endDateTime.format(endDateTime.parse(string2));
 
+        Calendar currentTime = Calendar.getInstance();
+        currentTime.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+        calendar1.set(Calendar.HOUR, 9);
+        calendar1.set(Calendar.MINUTE, 0);
+        calendar2.set(Calendar.HOUR, 16);
+        calendar2.set(Calendar.MINUTE, 0);
 
+        Date nowTime = currentTime.getTime();
+        if (nowTime.after(calendar1.getTime()) && nowTime.before(calendar2.getTime())) {
+            return true;
+        } else {
+            return false;
         }
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        getContentResolver().unregisterContentObserver(mObserver);
-    }
+
 }
 

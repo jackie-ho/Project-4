@@ -1,12 +1,14 @@
 package com.adi.ho.jackie.bubblestocks.RecyclerviewItems;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.adi.ho.jackie.bubblestocks.Activities.ArticleActivity;
 import com.adi.ho.jackie.bubblestocks.R;
 import com.adi.ho.jackie.bubblestocks.yahoorssfeed.Item;
 
@@ -51,11 +53,14 @@ public class NewsRecyclerAdapter extends RecyclerView.Adapter<NewsRecyclerAdapte
             super(itemView);
             mTitleText = (TextView)itemView.findViewById(R.id.news_title);
             mLinkText = (TextView)itemView.findViewById(R.id.news_story_link_textview);
+            itemView.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
-
-        }
+            Intent intent = new Intent(context, ArticleActivity.class);
+            intent.putExtra("LINK", mLinkText.getText().toString());
+            context.startActivity(intent);
+            }
     }
 }

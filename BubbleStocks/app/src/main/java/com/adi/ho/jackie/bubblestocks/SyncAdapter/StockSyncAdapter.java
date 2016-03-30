@@ -79,7 +79,6 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
 //
-
         ExecutorService marketThreads = Executors.newFixedThreadPool(2);
         System.out.println("Sync adapter running");
         Runnable runnable = new Runnable() {

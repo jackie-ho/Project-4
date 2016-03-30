@@ -1,9 +1,12 @@
 package com.adi.ho.jackie.bubblestocks.Fragments;
 
 import android.content.Context;
+import android.database.ContentObserver;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -12,7 +15,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
+import com.adi.ho.jackie.bubblestocks.Database.StockContentProvider;
+import com.adi.ho.jackie.bubblestocks.Database.StockDBHelper;
 import com.adi.ho.jackie.bubblestocks.R;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.MarketData;
 import com.adi.ho.jackie.bubblestocks.listitems.ChartItem;
@@ -49,7 +55,7 @@ public class MarketDataFragment extends Fragment {
     private String mSPIndexAvgJson;
     private ArrayList<String> mThreeMonthsDates;
     private LinkedList<Double> mDowMarketPriceArray;
-
+    private ContentObserver mObserver;
 
     @Nullable
     @Override
@@ -82,6 +88,9 @@ public class MarketDataFragment extends Fragment {
                 e.printStackTrace();
             }
         }
+        //Register content observer to observe price changes every minute
+        mObserver = new StockContentObserver(new Handler());
+        getContext().getContentResolver().registerContentObserver(StockContentProvider.CONTENT_URI,true,mObserver);
         return view;
     }
 
@@ -188,5 +197,38 @@ public class MarketDataFragment extends Fragment {
             return floatPriceArray;
         }
         return null;
+    }
+
+    private ArrayList<Float> readCsvFromIntradayMarket(){
+        return null;
+    }
+
+    //Observes for price changes during trading session
+    public class StockContentObserver extends ContentObserver {
+
+        public StockContentObserver(Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        public void onChange(boolean selfChange, Uri uri) {
+            //do stuff on UI thread
+            Log.d("MARKET DATA", "CHANGE OBSERVED AT URI: " + uri);
+            Cursor cursor = getContext().getContentResolver().query(StockContentProvider.CONTENT_URI, null, null, null, null);
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+                String price = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_PRICE));
+                Log.i("CONTENTOBSERVER", "New Price is: "+price);
+                cursor.moveToNext();
+            } cursor.close();
+
+
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        getContext().getContentResolver().unregisterContentObserver(mObserver);
     }
 }

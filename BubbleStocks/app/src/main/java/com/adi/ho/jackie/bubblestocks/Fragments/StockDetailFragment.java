@@ -7,12 +7,14 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
+import android.view.ActionProvider;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -78,7 +80,10 @@ public class StockDetailFragment extends Fragment {
     private TextView mDiviYield;
     private TextView mRevenue;
     private TextView mTarget;
+    private TextView mStockTicker;
+    private TextView mCompanyNameText;
     private YAxis mPriceAxis;
+    private ImageView mArrowIcon;
 
     @Nullable
     @Override
@@ -86,6 +91,9 @@ public class StockDetailFragment extends Fragment {
         View view = inflater.inflate(R.layout.stock_detailfragment, container, false);
 
         //References
+        mArrowIcon = (ImageView)view.findViewById(R.id.stock_detail_arrowicon);
+        mStockTicker = (TextView)view.findViewById(R.id.stock_detail_ticker);
+        mCompanyNameText = (TextView)view.findViewById(R.id.stock_detail_companyname);
         mChart = (CandleStickChart) view.findViewById(R.id.stock_detail_3mcandlestick);
         mFiveMinuteChart = (CandleStickChart) view.findViewById(R.id.stock_detail_5mincandlestick);
         mDailyChart = (LineChart) view.findViewById(R.id.stock_detail_1dlinechart);
@@ -147,6 +155,7 @@ public class StockDetailFragment extends Fragment {
                 JSONObject intradayInitialObject = new JSONObject(intradayJsonData);
                 JSONObject metaIntradayObject = intradayInitialObject.getJSONObject("meta");
                 companyName = metaIntradayObject.optString("Company-Name", "");
+                mCompanyNameText.setText("("+stockData.getSymbol().toUpperCase()+")"+companyName+" - ");
 
                 JSONArray intradayPricesArray = intradayInitialObject.getJSONArray("series");
                 for (int i = 0; i < intradayPricesArray.length(); i++) {
@@ -264,6 +273,7 @@ public class StockDetailFragment extends Fragment {
         data.setData(getPastThreeMonthsPrices());
         mCombinedThreeMChart.setData(data);
         mCombinedThreeMChart.invalidate();
+        mCombinedThreeMChart.animateXY(1400, 1400);
     }
 
     View.OnClickListener oneDayListener = new View.OnClickListener() {
@@ -295,6 +305,7 @@ public class StockDetailFragment extends Fragment {
                 mFiveMinuteChart.setVisibility(View.GONE);
                 mChart.setVisibility(View.GONE);
                 setUpCombinedChart();
+
             }
             Toast.makeText(getContext(), "Pressed 3M", Toast.LENGTH_SHORT).show();
         }
@@ -320,14 +331,6 @@ public class StockDetailFragment extends Fragment {
         ArrayList<BarEntry> entries = new ArrayList<BarEntry>();
 
         if (mTempHistQuoteList.size() > 0) {
-//            int counter = historicalStockQuoteWrappers.size();
-//            int index = 0;
-//            while (entries.size() < 59) {
-//                //Don't add to index 0 or bars will disappear upon pinch zoom
-//                entries.add(new BarEntry(historicalStockQuoteWrappers.get(counter - 1).getDayVolume(), index));
-//                counter -= 1;
-//                index++;
-//            }
             for (int j = 0; j<mTempHistQuoteList.size() ; j++){
                 entries.add(new BarEntry(mTempHistQuoteList.get(j).getDayVolume(),j));
             }
@@ -398,6 +401,7 @@ public class StockDetailFragment extends Fragment {
         return candleData;
     }
 
+    //TODO: Concenate strings with placeholders from strings.xml
     private void setStockData(){
         mYearLow.setText("52 Week Low: $"+ stockData.getYearLow());
         mYearHigh.setText("52 Week High: $"+stockData.getYearHigh());
@@ -412,6 +416,18 @@ public class StockDetailFragment extends Fragment {
             mPE.setText("PE: -");
         }
         mMarketCap.setText("Market Cap: $"+stockData.getMarketCap());
+        if (Double.parseDouble(stockData.getDayClose()) > Double.parseDouble(stockData.getDayOpen()) ){
+            mStockTicker.setText("$"+stockData.getDayClose()+" +$"+ stockData.getChange() +" +"
+                    + stockData.getPercentChange()+"%" );
+            mArrowIcon.setImageResource(R.drawable.arrow_up3);
+        } else if (Double.parseDouble(stockData.getDayClose()) < Double.parseDouble(stockData.getDayOpen()) ){
+            mStockTicker.setText("$"+stockData.getDayClose()+" -$"+ stockData.getChange() +" -"
+                    + stockData.getPercentChange()+"%" );
+            mArrowIcon.setImageResource(R.drawable.arrow_down3);
+        } else {
+
+        }
+
 
     }
 
@@ -456,15 +472,20 @@ public class StockDetailFragment extends Fragment {
         ll1.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_TOP);
         ll1.setTextSize(10f);
         ll1.setTypeface(tf);
-        ll1.setLabel("Previous close: $" + intradayStockDataLinkedList.get(0).getOpenPrice());
+        ll1.setLabel("Open Price: $" + intradayStockDataLinkedList.get(0).getOpenPrice());
 
         YAxis leftAxis = mDailyChart.getAxisLeft();
         leftAxis.removeAllLimitLines(); // reset all limit lines to avoid overlapping lines
         leftAxis.addLimitLine(ll1);
         leftAxis.setDrawLimitLinesBehindData(true);
 
+        XAxis bottomAxis = mDailyChart.getXAxis();
+        bottomAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+
         LineData intradayLinedata = new LineData(timeStampList, intradayDataSet);
         mDailyChart.setData(intradayLinedata);
+        mDailyChart.invalidate();
+        mDailyChart.animateX(1400);
     }
 
     //Separate since intraday data is called from onStart()
@@ -486,4 +507,6 @@ public class StockDetailFragment extends Fragment {
             mVol.setText("Volume: " + todaysVolume);
         }
     }
+
+
 }
