@@ -1,11 +1,14 @@
 package com.adi.ho.jackie.bubblestocks.Fragments;
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.ActionProvider;
@@ -53,6 +56,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import yahoofinance.Stock;
+
 /**
  * Created by JHADI on 3/23/16.
  */
@@ -88,6 +93,9 @@ public class StockDetailFragment extends Fragment {
     private YAxis mPriceAxis;
     private ImageView mArrowIcon;
     public TextView mPriceText;
+    private boolean mTrackedFlag;
+    private int stockId;
+    private FloatingActionButton fab;
 
 
     @Nullable
@@ -96,6 +104,7 @@ public class StockDetailFragment extends Fragment {
         View view = inflater.inflate(R.layout.stock_detailfragment, container, false);
 
         //References
+        fab = (FloatingActionButton)view.findViewById(R.id.stock_detail_addtoportfolio);
         mPriceText = (TextView)view.findViewById(R.id.stock_detail_currentpricetext);
         mArrowIcon = (ImageView)view.findViewById(R.id.stock_detail_arrowicon);
         mStockTicker = (TextView)view.findViewById(R.id.stock_detail_ticker);
@@ -136,8 +145,35 @@ public class StockDetailFragment extends Fragment {
         }
 
         setUpSixMChart();
+        checkIfTracked();
 
       return view;
+    }
+
+    private void checkIfTracked() {
+        //To get id and to correctly display add to portfolio button
+        Cursor cursor = getContext().getContentResolver().query(StockContentProvider.CONTENT_URI,StockDBHelper.ALL_COLUMNS,
+                StockDBHelper.COLUMN_STOCK_SYMBOL + " = ? ", new String[]{stockData.getSymbol().toUpperCase()},null,null);
+        if (cursor.getCount() > 0){
+            mTrackedFlag = true;
+            int counter = cursor.getCount();
+            //get latest entry, hopefully there's only one.
+            cursor.moveToPosition(counter-1);
+            stockId = cursor.getInt(cursor.getColumnIndex(StockDBHelper.COLUMN_ID));
+            fab.setVisibility(View.GONE);
+            Log.v(StockDetailFragment.class.getName(),"Tracked already: "+ stockData.getSymbol());
+
+        } else {
+            mTrackedFlag = false;
+            ContentValues tempInsert = new ContentValues();
+            tempInsert.put(StockDBHelper.COLUMN_STOCK_SYMBOL, stockData.getSymbol().toUpperCase());
+            tempInsert.put(StockDBHelper.COLUMN_STOCK_PRICE, stockData.getDayClose());
+            tempInsert.put(StockDBHelper.COLUMN_STOCK_TRACKED, 0);
+            getContext().getContentResolver().insert(StockContentProvider.CONTENT_URI, tempInsert);
+            Log.i(StockDetailFragment.class.getName(), "Inserted into database: "+ stockData.getSymbol());
+
+        }
+        cursor.close();
     }
 
     @Override
@@ -145,6 +181,7 @@ public class StockDetailFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         oneDayGraphButton.setOnClickListener(oneDayListener);
         threeMonthGraphButton.setOnClickListener(threeMonthListener);
+        fab.setOnClickListener(clickListener);
     }
 
     @Override
@@ -415,13 +452,13 @@ public class StockDetailFragment extends Fragment {
         mAvgVol.setText("Average Volume: "+ stockData.getAvgVol());
         mEPS.setText("EPS: "+stockData.getEps());
             mDiviYield.setText("Dividend Yield: " + stockData.getDiviYield() + "%");
-        mRevenue.setText("Revenue: $"+stockData.getRevenue());
+        mRevenue.setText("Revenue: $" + stockData.getRevenue());
         if (!stockData.getPe().equals(0)) {
             mPE.setText("PE: " + stockData.getPe());
         } else {
             mPE.setText("PE: -");
         }
-        mMarketCap.setText("Market Cap: $"+stockData.getMarketCap());
+        mMarketCap.setText("Market Cap: $" + stockData.getMarketCap());
         if (Double.parseDouble(stockData.getDayClose()) > Double.parseDouble(stockData.getDayOpen()) ){
             mStockTicker.setText("$"+ stockData.getChange() +" +"
                     + stockData.getPercentChange()+"%" );
@@ -522,13 +559,26 @@ public class StockDetailFragment extends Fragment {
         super.onDestroy();
         Cursor cursor = getContext().getContentResolver().query(StockContentProvider.CONTENT_URI, null, StockDBHelper.COLUMN_STOCK_SYMBOL +
         " = ?",new String[]{stockData.getSymbol().toUpperCase()}, null);
-        cursor.moveToFirst();
+        int counter = cursor.getCount();
+        cursor.moveToPosition(counter-1);
         if (cursor.getCount() > 0 && cursor.getInt(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_TRACKED)) == 0){
             getContext().getContentResolver().delete(StockContentProvider.CONTENT_URI, StockDBHelper.COLUMN_STOCK_SYMBOL + " = ? ",
                     new String[]{stockData.getSymbol().toUpperCase()});
-            Log.i("STOCKDETAIL", "Deleted stock symbol: "+stockData.getSymbol());
+            Log.i("STOCKDETAIL", "Deleted stock symbol: " + stockData.getSymbol());
         }
+        cursor.close();
     }
 
+    View.OnClickListener clickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Uri uri = Uri.parse(StockContentProvider.CONTENT_URI+"/"+String.valueOf(stockId));
+            ContentValues portfolioStock = new ContentValues();
+            portfolioStock.put(StockDBHelper.COLUMN_STOCK_TRACKED, 1);
+            getContext().getContentResolver().update(uri, portfolioStock, null,null);
+            Log.i(StockDetailFragment.class.getName(), "Added to tracked stocks: " + stockData.getSymbol().toUpperCase());
+            v.setVisibility(View.GONE);
+        }
+    };
 
 }

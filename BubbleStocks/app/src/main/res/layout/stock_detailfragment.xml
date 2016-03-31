@@ -81,10 +81,7 @@
             android:layout_height="300dp"
             android:visibility="gone"
             android:animateLayoutChanges="true"></com.github.mikephil.charting.charts.CombinedChart>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/x_axis_label"/>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -226,5 +223,13 @@
             </LinearLayout>
         </LinearLayout>
         </ScrollView>
+        <android.support.design.widget.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/stock_detail_addtoportfolio"
+            android:layout_gravity="bottom|end"
+            android:onClick="addToPortfolio"
+            android:src="@android:drawable/ic_input_add"/>
     </LinearLayout>
+
 </LinearLayout>

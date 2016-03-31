@@ -11,6 +11,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Handler;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
@@ -24,6 +25,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import com.adi.ho.jackie.bubblestocks.Database.StockContentProvider;
@@ -57,6 +59,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -83,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     Toolbar toolbar;
 
     private PieChart mMainNavigationTool;
+    private List<String> fragmentTags;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
 
         //Sync stock and market prices
         autoSyncStocks();
-
+        fragmentTags = Arrays.asList(getResources().getStringArray(R.array.fragment_stack_tag));
         //Toolbar search reference
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         mMaterialSearchView = (MaterialSearchView) findViewById(R.id.material_searchview);
@@ -209,7 +213,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         return true;
     }
 
-   //Retrieve intraday and historical data
+    //Retrieve intraday and historical data
     @Override
     public void selectedStock(Stock searchedStock) {
         //Get historical data for the searched stock.
@@ -234,17 +238,17 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
                 StockDetailFragment stockDetailFragment = new StockDetailFragment();
                 FragmentManager fragmentManager = getSupportFragmentManager();
                 FragmentTransaction stockTransaction = fragmentManager.beginTransaction();
-                ContentValues tempInsert = new ContentValues();
-                tempInsert.put(StockDBHelper.COLUMN_STOCK_SYMBOL, searchedStock.getSymbol().toUpperCase());
-                tempInsert.put(StockDBHelper.COLUMN_STOCK_PRICE, searchedStock.getQuote().getPrice().toString());
-                tempInsert.put(StockDBHelper.COLUMN_STOCK_TRACKED, 0);
-                getContentResolver().insert(StockContentProvider.CONTENT_URI,tempInsert);
+//                ContentValues tempInsert = new ContentValues();
+//                tempInsert.put(StockDBHelper.COLUMN_STOCK_SYMBOL, searchedStock.getSymbol().toUpperCase());
+//                tempInsert.put(StockDBHelper.COLUMN_STOCK_PRICE, searchedStock.getQuote().getPrice().toString());
+//                tempInsert.put(StockDBHelper.COLUMN_STOCK_TRACKED, 0);
+//                getContentResolver().insert(StockContentProvider.CONTENT_URI, tempInsert);
                 Bundle stockBundle = new Bundle();
                 stockBundle.putParcelable("EXSTOCK", parcelingStock);
                 stockBundle.putParcelableArrayList("HISTORICALQUOTE", historicalQuoteList);
                 stockBundle.putString("INTRADAY", intradayData);
                 stockDetailFragment.setArguments(stockBundle);
-                stockTransaction.replace(R.id.stock_fragmentcontainer, stockDetailFragment).commit();
+                stockTransaction.replace(R.id.stock_fragmentcontainer, stockDetailFragment).addToBackStack(null).commit();
             }
         }
     }
@@ -316,7 +320,8 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
                         stockBundle.putString("SP", spIndexAvg);
                         stockBundle.putString("NYSE", nyseIndexAvg);
                         marketDataFragment.setArguments(stockBundle);
-                        marketDataTransaction.replace(R.id.marketdata_fragmentcontainer, marketDataFragment).addToBackStack(null).commit();
+                        int count = fragmentManager.getBackStackEntryCount();
+                        marketDataTransaction.replace(R.id.marketdata_fragmentcontainer, marketDataFragment).addToBackStack(fragmentTags.get(count)).commit();
                     }
                 }
             }
@@ -523,7 +528,6 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
             return false;
         }
     }
-
 
 }
 
