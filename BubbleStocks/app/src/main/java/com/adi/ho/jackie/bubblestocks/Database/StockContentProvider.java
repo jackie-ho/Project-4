@@ -47,7 +47,7 @@ public class StockContentProvider extends ContentProvider {
 
         switch (uriType) {
             case STOCK_ID:
-                cursor = dbHelper.getStockPriceChange(uri.getLastPathSegment());
+                cursor = dbHelper.getStockPriceChange(uri, projection, selection, selectionArgs, sortOrder);
                 break;
             case STOCK:
                 cursor = dbHelper.getAllStocks();
@@ -103,11 +103,12 @@ public class StockContentProvider extends ContentProvider {
         int uriType = sURIMatcher.match(uri);
         int rowsUpdated = 0;
 
-        Log.d(StockContentProvider.class.getName(), "Triggered update");
+
 
         switch (uriType) {
             case STOCK_ID:
-                rowsUpdated = dbHelper.updateStockById(uri.getLastPathSegment(), values);
+                rowsUpdated = dbHelper.updateStockById(uri.getLastPathSegment(), values, selection, selectionArgs);
+                Log.d(StockContentProvider.class.getName(), "Triggered update at row: "+ rowsUpdated + " uri last path segment: "+ uri.getLastPathSegment());
                 break;
             default:
                 throw new IllegalArgumentException("Unknown URI: " + uri);

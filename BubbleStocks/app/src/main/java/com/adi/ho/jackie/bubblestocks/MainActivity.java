@@ -188,7 +188,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
 
         } else try {
             //Check for times between 9 am - 4 pm
-            if (checkIfTradingTimeRange()) {
+            if (checkIfTradingTimeRange(0)) {
                 ContentResolver.setIsSyncable(mAccount, AUTHORITY, 1);
                 ContentResolver.setSyncAutomatically(mAccount, AUTHORITY, true);
                 long seconds = 120;
@@ -499,13 +499,30 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     }
 
     //
-    private boolean checkIfTradingTimeRange() throws ParseException {
+    public static boolean checkIfTradingTimeRange(int number) throws ParseException {
         String string1 = "9";
-        SimpleDateFormat startDateTime = new SimpleDateFormat("HH");
-        Calendar calendar1 = Calendar.getInstance();
-        calendar1.getTime();
-//        calendar1.setTime(time1);
-        String startTime = startDateTime.format(startDateTime.parse(string1));
+        String minutes= "30";
+        SimpleDateFormat startDateTime;
+        Calendar calendar1;
+        String startTime;
+        calendar1 = Calendar.getInstance();
+        switch (number){
+            case 0:
+                startDateTime = new SimpleDateFormat("HH");
+                calendar1.getTime();
+                startTime = startDateTime.format(startDateTime.parse(string1));
+                calendar1.set(Calendar.HOUR, 9);
+                calendar1.set(Calendar.MINUTE, 0);
+                break;
+            case 1:
+                startDateTime = new SimpleDateFormat("HH:mm");
+                calendar1.getTime();
+                startTime = startDateTime.format(startDateTime.parse(string1+":"+minutes));
+                calendar1.set(Calendar.HOUR, 9);
+                calendar1.set(Calendar.MINUTE, 31);
+                break;
+        }
+
 
         String string2 = "16";
         SimpleDateFormat endDateTime = new SimpleDateFormat("HH");
@@ -516,8 +533,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
 
         Calendar currentTime = Calendar.getInstance();
         currentTime.setTimeZone(TimeZone.getTimeZone("America/New_York"));
-        calendar1.set(Calendar.HOUR, 9);
-        calendar1.set(Calendar.MINUTE, 0);
+
         calendar2.set(Calendar.HOUR, 16);
         calendar2.set(Calendar.MINUTE, 0);
 

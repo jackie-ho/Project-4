@@ -1,12 +1,14 @@
 package com.adi.ho.jackie.bubblestocks.Fragments;
 
 import android.content.ContentValues;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
@@ -24,6 +26,7 @@ import android.widget.Toast;
 
 import com.adi.ho.jackie.bubblestocks.Database.StockContentProvider;
 import com.adi.ho.jackie.bubblestocks.Database.StockDBHelper;
+import com.adi.ho.jackie.bubblestocks.MainActivity;
 import com.adi.ho.jackie.bubblestocks.R;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.DBStock;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.HistoricalStockQuoteWrapper;
@@ -51,6 +54,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.URI;
+import java.net.URL;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -96,6 +102,8 @@ public class StockDetailFragment extends Fragment {
     private boolean mTrackedFlag;
     private int stockId;
     private FloatingActionButton fab;
+    private ContentObserver mObserver;
+    private boolean isStockInDB;
 
 
     @Nullable
@@ -144,6 +152,9 @@ public class StockDetailFragment extends Fragment {
             mXAxisDays.add(String.valueOf(i));
         }
 
+        //Register content observer
+        mObserver = new StockContentObserver(new Handler());
+
         setUpSixMChart();
         checkIfTracked();
 
@@ -154,11 +165,22 @@ public class StockDetailFragment extends Fragment {
         //To get id and to correctly display add to portfolio button
         Cursor cursor = getContext().getContentResolver().query(StockContentProvider.CONTENT_URI,StockDBHelper.ALL_COLUMNS,
                 StockDBHelper.COLUMN_STOCK_SYMBOL + " = ? ", new String[]{stockData.getSymbol().toUpperCase()},null,null);
-        if (cursor.getCount() > 0){
+       cursor.moveToFirst();
+        String symbol = "";
+        while (!cursor.isAfterLast()){
+            symbol = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_SYMBOL));
+            if (symbol.equalsIgnoreCase(stockData.getSymbol())){
+                isStockInDB = true;
+                break;
+            }
+            cursor.moveToNext();
+        }
+
+        if (isStockInDB){
             mTrackedFlag = true;
-            int counter = cursor.getCount();
+       //     int counter = cursor.getCount();
             //get latest entry, hopefully there's only one.
-            cursor.moveToPosition(counter-1);
+         //   cursor.moveToPosition(counter-1);
             stockId = cursor.getInt(cursor.getColumnIndex(StockDBHelper.COLUMN_ID));
             fab.setVisibility(View.GONE);
             Log.v(StockDetailFragment.class.getName(),"Tracked already: "+ stockData.getSymbol());
@@ -168,9 +190,11 @@ public class StockDetailFragment extends Fragment {
             ContentValues tempInsert = new ContentValues();
             tempInsert.put(StockDBHelper.COLUMN_STOCK_SYMBOL, stockData.getSymbol().toUpperCase());
             tempInsert.put(StockDBHelper.COLUMN_STOCK_PRICE, stockData.getDayClose());
+            tempInsert.put(StockDBHelper.COLUMN_STOCK_OPENPRICE, stockData.getDayOpen());
             tempInsert.put(StockDBHelper.COLUMN_STOCK_TRACKED, 0);
-            getContext().getContentResolver().insert(StockContentProvider.CONTENT_URI, tempInsert);
-            Log.i(StockDetailFragment.class.getName(), "Inserted into database: "+ stockData.getSymbol());
+            Uri uri = getContext().getContentResolver().insert(StockContentProvider.CONTENT_URI, tempInsert);
+            stockId = Integer.parseInt(uri.getLastPathSegment());
+            Log.i(StockDetailFragment.class.getName(), "Inserted into database: "+ stockData.getSymbol() + " with id : "+stockId);
 
         }
         cursor.close();
@@ -214,6 +238,14 @@ public class StockDetailFragment extends Fragment {
 
         }
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        //Register content observer
+        getContext().getContentResolver().registerContentObserver(StockContentProvider.CONTENT_URI, true, mObserver);
+    }
+
 
     private void setUpSixMChart(){
         mChart.setBackgroundColor(Color.WHITE);
@@ -465,7 +497,7 @@ public class StockDetailFragment extends Fragment {
             mPriceText.setText("$"+stockData.getDayClose());
             mArrowIcon.setImageResource(R.drawable.arrow_up3);
         } else if (Double.parseDouble(stockData.getDayClose()) < Double.parseDouble(stockData.getDayOpen()) ){
-            mStockTicker.setText("$"+stockData.getDayClose()+" -$"+ stockData.getChange() +" -"
+            mStockTicker.setText("$"+ stockData.getChange() +" -"
                     + stockData.getPercentChange()+"%" );
             mPriceText.setText("$"+stockData.getDayClose());
             mArrowIcon.setImageResource(R.drawable.arrow_down3);
@@ -553,6 +585,12 @@ public class StockDetailFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        //deregister content observer
+        getContext().getContentResolver().unregisterContentObserver(mObserver);
+    }
 
     @Override
     public void onDestroy() {
@@ -560,13 +598,14 @@ public class StockDetailFragment extends Fragment {
         Cursor cursor = getContext().getContentResolver().query(StockContentProvider.CONTENT_URI, null, StockDBHelper.COLUMN_STOCK_SYMBOL +
         " = ?",new String[]{stockData.getSymbol().toUpperCase()}, null);
         int counter = cursor.getCount();
-        cursor.moveToPosition(counter-1);
+        cursor.moveToPosition(counter - 1);
         if (cursor.getCount() > 0 && cursor.getInt(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_TRACKED)) == 0){
-            getContext().getContentResolver().delete(StockContentProvider.CONTENT_URI, StockDBHelper.COLUMN_STOCK_SYMBOL + " = ? ",
-                    new String[]{stockData.getSymbol().toUpperCase()});
+            getContext().getContentResolver().delete(StockContentProvider.CONTENT_URI, StockDBHelper.COLUMN_ID + " = ? ",
+                    new String[]{String.valueOf(stockId)});
             Log.i("STOCKDETAIL", "Deleted stock symbol: " + stockData.getSymbol());
         }
         cursor.close();
+
     }
 
     View.OnClickListener clickListener = new View.OnClickListener() {
@@ -581,4 +620,49 @@ public class StockDetailFragment extends Fragment {
         }
     };
 
-}
+    //Observes for price changes during trading session
+    public class StockContentObserver extends ContentObserver {
+
+        public StockContentObserver(Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        public void onChange(boolean selfChange, Uri uri) {
+            //do stuff on UI thread
+
+                Log.d("MARKET DATA", "CHANGE OBSERVED AT URI: " + uri);
+                Cursor cursor = getContext().getContentResolver().query(StockContentProvider.CONTENT_URI, null, StockDBHelper.COLUMN_ID
+                        + " = ? ", new String[]{String.valueOf(stockId)}, null);
+                cursor.moveToFirst();
+                String newPrice = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_PRICE));
+                String openPrice = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_OPENPRICE));
+                //Check whether new price is above old price
+                try {
+                    if (MainActivity.checkIfTradingTimeRange(1))
+                        if (Double.parseDouble(newPrice) > Double.parseDouble(openPrice)) {
+                            mPriceText.setText("$" + newPrice);
+                            float priceChange = Float.parseFloat(newPrice) - Float.parseFloat(openPrice);
+                            float percentageChange = (Float.parseFloat(newPrice) - Float.parseFloat(openPrice)) / Float.parseFloat(stockData.getDayOpen()) * 100;
+                            mStockTicker.setText("$" + String.valueOf(priceChange) + " +" + String.valueOf(percentageChange) + "%");
+                            mArrowIcon.setImageResource(R.drawable.arrow_up3);
+                        } else if (Double.parseDouble(newPrice) < Double.parseDouble(openPrice)) {
+                            mPriceText.setText("$" + newPrice);
+                            float priceChange = Math.abs(Float.parseFloat(newPrice) - Float.parseFloat(openPrice));
+                            float percentageChange = (Float.parseFloat(newPrice) - Float.parseFloat(openPrice)) / Float.parseFloat(stockData.getDayOpen()) * 100;
+                            mStockTicker.setText("$" + String.valueOf(priceChange) + " -" + String.valueOf(percentageChange) + "%");
+                            mArrowIcon.setImageResource(R.drawable.arrow_down3);
+                        } else {
+                            mPriceText.setText(newPrice);
+                            mStockTicker.setText("N/C");
+                        }
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                cursor.close();
+            }
+
+        }
+    }
+
+

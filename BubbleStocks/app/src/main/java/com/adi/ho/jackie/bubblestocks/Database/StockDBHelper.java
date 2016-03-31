@@ -10,6 +10,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.net.Uri;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -28,7 +29,7 @@ public class StockDBHelper extends SQLiteOpenHelper {
     public static final String COLUMN_STOCK_OPENPRICE = "openprice";
 
 
-    public static final String[] ALL_COLUMNS = new String[]{COLUMN_ID, COLUMN_STOCK_SYMBOL, COLUMN_STOCK_PRICE, COLUMN_STOCK_TRACKED};
+    public static final String[] ALL_COLUMNS = new String[]{COLUMN_ID, COLUMN_STOCK_SYMBOL, COLUMN_STOCK_PRICE, COLUMN_STOCK_OPENPRICE, COLUMN_STOCK_TRACKED};
     public StockDBHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -60,11 +61,11 @@ public class StockDBHelper extends SQLiteOpenHelper {
         return rowId;
     }
 
-    public int updateStockById(String id, ContentValues values) {
+    public int updateStockById(String uriLastPathSegment, ContentValues values, String selection, String[] selectionArgs) {
         SQLiteDatabase db = getWritableDatabase();
 
         //Id is equivalent to time of trade
-        int numRowsChanged = db.update(TABLE_STOCKS, values, COLUMN_ID + " = ? ", new String[]{id});
+        int numRowsChanged = db.update(TABLE_STOCKS, values, selection, selectionArgs);
 
         return numRowsChanged;
     }
@@ -76,10 +77,11 @@ public class StockDBHelper extends SQLiteOpenHelper {
         return cursor;
     }
 
-    public Cursor getStockPriceChange(String id) {
+    public Cursor getStockPriceChange(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         SQLiteDatabase db = getReadableDatabase();
 
-        Cursor cursor = db.query(TABLE_STOCKS, ALL_COLUMNS, COLUMN_STOCK_PRICE +" = ? ", new String[]{id}, null, null, null);
+        Cursor cursor = db.query(TABLE_STOCKS, projection, selection
+                , selectionArgs , null, null, null);
         return cursor;
     }
 

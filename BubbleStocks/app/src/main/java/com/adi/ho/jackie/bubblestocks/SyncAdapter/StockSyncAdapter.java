@@ -16,10 +16,14 @@ import android.util.Log;
 
 import com.adi.ho.jackie.bubblestocks.Database.StockContentProvider;
 import com.adi.ho.jackie.bubblestocks.Database.StockDBHelper;
+import com.adi.ho.jackie.bubblestocks.HttpConnections.MarkitHttpSyncRequest;
 import com.adi.ho.jackie.bubblestocks.HttpConnections.NasdaqIntradayHttpRequest;
 import com.adi.ho.jackie.bubblestocks.HttpConnections.SpyHttpRequests;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.DBStock;
 import com.google.gson.Gson;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -54,20 +58,11 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
      */
     public StockSyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
-        /*
-         * If your app uses a content resolver, get an instance of it
-         * from the incoming Context
-         */
         mContentResolver = context.getContentResolver();
         this.context = context;
 
     }
 
-    /**
-     * Set up the sync adapter. This form of the
-     * constructor maintains compatibility with Android 3.0
-     * and later platform versions
-     */
     public StockSyncAdapter(
             Context context,
             boolean autoInitialize,
@@ -90,10 +85,10 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
             dbCursor = provider.query(StockContentProvider.CONTENT_URI, null, null, null, null);
             numberOfStockItems = dbCursor.getCount();
             dbCursor.moveToPosition(2);
-            while (!dbCursor.isAfterLast()){
+            while (!dbCursor.isAfterLast()) {
                 int id = dbCursor.getInt(dbCursor.getColumnIndex(StockDBHelper.COLUMN_ID));
-                String symbol= dbCursor.getString(dbCursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_SYMBOL));
-                        stockPortfolioList.add(new StockSyncItem(id,symbol));
+                String symbol = dbCursor.getString(dbCursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_SYMBOL));
+                stockPortfolioList.add(new StockSyncItem(id, symbol));
                 dbCursor.moveToNext();
             }
 
@@ -103,10 +98,10 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
             dbCursor.close();
             //Threadpool get market data
             ExecutorService marketThreads = Executors.newFixedThreadPool(2);
-            marketThreads.execute(nasdaqRunnable);
-            marketThreads.execute(spyRunnable);
+         //   marketThreads.execute(nasdaqRunnable);
+           // marketThreads.execute(spyRunnable);
             //Async task to retrieve "tracked" stocks
-            for (int i =0 ; i < stockPortfolioList.size();i++){
+            for (int i = 0; i < stockPortfolioList.size(); i++) {
                 new StockQuoteRequestAsync().execute(stockPortfolioList.get(i));
             }
 
@@ -154,24 +149,38 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
         }
     };
 
-    private class StockQuoteRequestAsync extends AsyncTask<StockSyncItem,Void,String>{
-            Stock stock;
-             String id = "";
+    private class StockQuoteRequestAsync extends AsyncTask<StockSyncItem, Void, String> {
+        DBStock stock = new DBStock();
+        String data = "";
+        String id = "";
+        boolean callSuccess = false;
+
         @Override
         protected String doInBackground(StockSyncItem... params) {
             String price = "0";
             try {
-                stock = YahooFinance.get(params[0].getSymbol());
-                price = stock.getQuote().getPrice().toString();
+                //stock = YahooFinance.get(params[0].getSymbol());
+//                price = stock.getQuote().getPrice().toString();
                 id = String.valueOf(params[0].getId());
-
+                data = new MarkitHttpSyncRequest().run(params[0].getSymbol());
+                JSONObject stockObject = new JSONObject(data);
+                stock.setDayOpen(stockObject.getString("Open"));
+                stock.setDayClose(stockObject.getString("LastPrice"));
+                if (stockObject.getString("Status").equals("SUCCESS")) {
+                    callSuccess = true;
+                }
             } catch (IOException e) {
                 e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
             } finally {
-                Uri uri = Uri.parse(StockContentProvider.CONTENT_URI +"/"+ id);
-                ContentValues stockValues = new ContentValues();
-                stockValues.put(StockDBHelper.COLUMN_STOCK_PRICE, stock.getQuote().getPrice().toString());
-                mContentResolver.update(uri,stockValues, StockDBHelper.COLUMN_ID + " = ? ", new String[]{id});
+                if (callSuccess) {
+                    Uri uri = Uri.parse(StockContentProvider.CONTENT_URI + "/" + id);
+                    ContentValues stockValues = new ContentValues();
+                    stockValues.put(StockDBHelper.COLUMN_STOCK_PRICE, stock.getDayClose());
+                    stockValues.put(StockDBHelper.COLUMN_STOCK_OPENPRICE, stock.getDayOpen());
+                    mContentResolver.update(uri, stockValues, StockDBHelper.COLUMN_ID + " = ? ", new String[]{id});
+                }
             }
             return price;
         }
