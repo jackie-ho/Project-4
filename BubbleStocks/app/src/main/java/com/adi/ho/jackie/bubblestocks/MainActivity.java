@@ -2,9 +2,14 @@ package com.adi.ho.jackie.bubblestocks;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.animation.Animator;
+import android.animation.AnimatorInflater;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -26,6 +31,9 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.adi.ho.jackie.bubblestocks.Database.StockContentProvider;
@@ -46,6 +54,8 @@ import com.adi.ho.jackie.bubblestocks.oauth.TradeKingClient;
 import com.github.mikephil.charting.animation.Easing;
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.formatter.PercentFormatter;
@@ -80,6 +90,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     // Account
     public static final String ACCOUNT = "default_account";
     private MaterialSearchView mMaterialSearchView;
+    private static final String INITIAL_START = "Initialized";
 
     Account mAccount;
     ContentResolver mResolver;
@@ -87,6 +98,9 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
 
     private PieChart mMainNavigationTool;
     private List<String> fragmentTags;
+    private boolean initialSync =true;
+    private List<ImageView> bubbleList;
+    private RelativeLayout mParentLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,10 +118,15 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         //Sync stock and market prices
         autoSyncStocks();
         fragmentTags = Arrays.asList(getResources().getStringArray(R.array.fragment_stack_tag));
+        bubbleList = new ArrayList<>();
+
         //Toolbar search reference
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         mMaterialSearchView = (MaterialSearchView) findViewById(R.id.material_searchview);
         mMainNavigationTool = (PieChart) findViewById(R.id.home_navigationmenu);
+        mParentLayout = (RelativeLayout)findViewById(R.id.main_activity_rel_layout);
+
+
         setSupportActionBar(toolbar);
 
 
@@ -173,35 +192,47 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     }
 
     private void autoSyncStocks() {
+        SharedPreferences settings = getPreferences(Context.MODE_PRIVATE);
+        initialSync = settings.getBoolean(INITIAL_START, true);
 
-        Calendar currentTime = Calendar.getInstance();
-        currentTime.setTimeZone(TimeZone.getTimeZone("America/New_York"));
-        SimpleDateFormat tradingTimeRange = new SimpleDateFormat("EEE, dd MMM HH:mm");
-        String dateAndTime = tradingTimeRange.format(currentTime.getTime());
+            Calendar currentTime = Calendar.getInstance();
+            currentTime.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+            SimpleDateFormat tradingTimeRange = new SimpleDateFormat("EEE, dd MMM HH:mm");
+            String dateAndTime = tradingTimeRange.format(currentTime.getTime());
 
-        //Activate or deactive syncadapter based off current time in NY
-        if (dateAndTime.contains("Sat") || dateAndTime.contains("Sun")) {
+            //Activate or deactive syncadapter based off current time in NY
+            if (dateAndTime.contains("Sat") || dateAndTime.contains("Sun")) {
 
-            ContentResolver.setIsSyncable(mAccount, AUTHORITY, 0);
-            ContentResolver.cancelSync(null, null);
-            Log.d("SYNCADAPTER", "Sync canceled");
-
-        } else try {
-            //Check for times between 9 am - 4 pm
-            if (checkIfTradingTimeRange(0)) {
-                ContentResolver.setIsSyncable(mAccount, AUTHORITY, 1);
-                ContentResolver.setSyncAutomatically(mAccount, AUTHORITY, true);
-                long seconds = 120;
-                ContentResolver.addPeriodicSync(mAccount, AUTHORITY, Bundle.EMPTY, seconds);
-            } else {
                 ContentResolver.setIsSyncable(mAccount, AUTHORITY, 0);
                 ContentResolver.cancelSync(null, null);
                 Log.d("SYNCADAPTER", "Sync canceled");
+
+            } else  try {
+                //Check for times between 9 am - 4 pm
+                if (checkIfTradingTimeRange(0)) {
+                    if (initialSync) {
+                        ContentResolver.setIsSyncable(mAccount, AUTHORITY, 1);
+                        ContentResolver.setSyncAutomatically(mAccount, AUTHORITY, true);
+                        long seconds = 60;
+                        ContentResolver.addPeriodicSync(mAccount, AUTHORITY, Bundle.EMPTY, seconds);
+                        Log.i(MainActivity.class.getName(), "Sync started, size 1");
+                        //Start sync service once
+                        SharedPreferences.Editor editor = settings.edit();
+                        editor.putBoolean(INITIAL_START, false);
+                        editor.commit();
+                    }
+
+                } else {
+                    ContentResolver.setIsSyncable(mAccount, AUTHORITY, 0);
+                    ContentResolver.cancelSync(null, null);
+                    Log.d("SYNCADAPTER", "Sync canceled");
+                }
+            } catch (ParseException e) {
+                e.printStackTrace();
             }
-        } catch (ParseException e) {
-            e.printStackTrace();
+
+
         }
-    }
 
 
     @Override
@@ -336,6 +367,31 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     protected void onResume() {
         super.onResume();
         setTitle("Home");
+        for (int i = 0 ; i < 15; i ++) {
+
+            ImageView image = new ImageView(this);
+            image.setLayoutParams(new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            image.setMaxHeight(100);
+            image.setMaxWidth(100);
+            image.setPadding(5,800,0,0);
+            image.setImageResource();
+            // Adds the view to the layout
+            mParentLayout.addView(image);
+        }
+        //Random movement
+        float scaley  = (float)(Math.random()*2+1000);
+        float scalex = (float)(Math.random()*5+50);
+
+        ObjectAnimator anim1 = ObjectAnimator.ofFloat()
+
+        ImageView bubble = (ImageView)findViewById(R.id.testbubble);
+        ImageView bubble1 = (ImageView)findViewById(R.id.testbubble3);
+        ImageView bubble2 = (ImageView)findViewById(R.id.testbubble2);
+        Animator moveUp = (AnimatorSet) AnimatorInflater.loadAnimator(this, R.animator.bubblespin1);
+        moveUp.setTarget(bubble);
+        moveUp.setTarget(bubble1);
+        moveUp.setTarget(bubble2);
+        moveUp.start();
     }
 
     private void homeNavigationMenu() {
@@ -506,35 +562,32 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         Calendar calendar1;
         String startTime;
         calendar1 = Calendar.getInstance();
+        calendar1.setTimeZone(TimeZone.getTimeZone("America/New_York"));
         switch (number){
             case 0:
                 startDateTime = new SimpleDateFormat("HH");
-                calendar1.getTime();
                 startTime = startDateTime.format(startDateTime.parse(string1));
-                calendar1.set(Calendar.HOUR, 9);
+                calendar1.set(Calendar.HOUR_OF_DAY, 9);
                 calendar1.set(Calendar.MINUTE, 0);
                 break;
             case 1:
                 startDateTime = new SimpleDateFormat("HH:mm");
-                calendar1.getTime();
                 startTime = startDateTime.format(startDateTime.parse(string1+":"+minutes));
-                calendar1.set(Calendar.HOUR, 9);
+                calendar1.set(Calendar.HOUR_OF_DAY, 9);
                 calendar1.set(Calendar.MINUTE, 31);
                 break;
         }
 
-
         String string2 = "16";
         SimpleDateFormat endDateTime = new SimpleDateFormat("HH");
         Calendar calendar2 = Calendar.getInstance();
-        calendar2.getTime();
-//        calendar2.setTime(time2);
+        calendar2.setTimeZone(TimeZone.getTimeZone("America/New_York"));
         String endTime = endDateTime.format(endDateTime.parse(string2));
 
         Calendar currentTime = Calendar.getInstance();
         currentTime.setTimeZone(TimeZone.getTimeZone("America/New_York"));
 
-        calendar2.set(Calendar.HOUR, 16);
+        calendar2.set(Calendar.HOUR_OF_DAY, 16);
         calendar2.set(Calendar.MINUTE, 0);
 
         Date nowTime = currentTime.getTime();
@@ -544,6 +597,5 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
             return false;
         }
     }
-
 }
 

@@ -103,8 +103,6 @@ public class StockContentProvider extends ContentProvider {
         int uriType = sURIMatcher.match(uri);
         int rowsUpdated = 0;
 
-
-
         switch (uriType) {
             case STOCK_ID:
                 rowsUpdated = dbHelper.updateStockById(uri.getLastPathSegment(), values, selection, selectionArgs);

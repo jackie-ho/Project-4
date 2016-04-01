@@ -5,6 +5,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -34,6 +35,12 @@ public class IntradayStockData implements Comparable {
         this.openPrice = intradayJsonObject.getString("open");
         this.volume = intradayJsonObject.getString("volume");
 
+    }
+
+    public static String getCurrentTime(){
+        Calendar cal = Calendar.getInstance();
+        SimpleDateFormat newSDF = new SimpleDateFormat("h:mm");
+        return newSDF.format(cal.getTime());
     }
 
     public String getTimestamp() {

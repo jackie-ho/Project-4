@@ -20,6 +20,7 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -48,6 +49,7 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.interfaces.datasets.ICandleDataSet;
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.utils.ColorTemplate;
 
 import org.json.JSONArray;
@@ -56,6 +58,8 @@ import org.json.JSONObject;
 
 import java.net.URI;
 import java.net.URL;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -112,25 +116,25 @@ public class StockDetailFragment extends Fragment {
         View view = inflater.inflate(R.layout.stock_detailfragment, container, false);
 
         //References
-        fab = (FloatingActionButton)view.findViewById(R.id.stock_detail_addtoportfolio);
-        mPriceText = (TextView)view.findViewById(R.id.stock_detail_currentpricetext);
-        mArrowIcon = (ImageView)view.findViewById(R.id.stock_detail_arrowicon);
-        mStockTicker = (TextView)view.findViewById(R.id.stock_detail_ticker);
-        mCompanyNameText = (TextView)view.findViewById(R.id.stock_detail_companyname);
+        fab = (FloatingActionButton) view.findViewById(R.id.stock_detail_addtoportfolio);
+        mPriceText = (TextView) view.findViewById(R.id.stock_detail_currentpricetext);
+        mArrowIcon = (ImageView) view.findViewById(R.id.stock_detail_arrowicon);
+        mStockTicker = (TextView) view.findViewById(R.id.stock_detail_ticker);
+        mCompanyNameText = (TextView) view.findViewById(R.id.stock_detail_companyname);
         mChart = (CandleStickChart) view.findViewById(R.id.stock_detail_3mcandlestick);
         mFiveMinuteChart = (CandleStickChart) view.findViewById(R.id.stock_detail_5mincandlestick);
         mDailyChart = (LineChart) view.findViewById(R.id.stock_detail_1dlinechart);
-        mCombinedThreeMChart = (CombinedChart)view.findViewById(R.id.stock_detail_3mcombinedchart);
-        mDiviYield = (TextView)view.findViewById(R.id.stock_detail_diviyieldtext);
-        mEPS = (TextView)view.findViewById(R.id.stock_detail_epstext);
-        mMarketCap = (TextView)view.findViewById(R.id.stock_Detail_stockmarketcaptext);
-        mAvgVol = (TextView)view.findViewById(R.id.stock_detail_averagevolumetext);
-        mVol = (TextView)view.findViewById(R.id.stock_detail_volumetext);
-        mPE = (TextView)view.findViewById(R.id.stock_detail_petext);
-        mRevenue = (TextView)view.findViewById(R.id.stock_detail_stockrevenuetext);
-        mTarget = (TextView)view.findViewById(R.id.stock_detail_stockoneyeartarget);
-        mYearHigh = (TextView)view.findViewById(R.id.stock_detail_52wkhightext);
-        mYearLow = (TextView)view.findViewById(R.id.stock_detail_52wklowtext);
+        mCombinedThreeMChart = (CombinedChart) view.findViewById(R.id.stock_detail_3mcombinedchart);
+        mDiviYield = (TextView) view.findViewById(R.id.stock_detail_diviyieldtext);
+        mEPS = (TextView) view.findViewById(R.id.stock_detail_epstext);
+        mMarketCap = (TextView) view.findViewById(R.id.stock_Detail_stockmarketcaptext);
+        mAvgVol = (TextView) view.findViewById(R.id.stock_detail_averagevolumetext);
+        mVol = (TextView) view.findViewById(R.id.stock_detail_volumetext);
+        mPE = (TextView) view.findViewById(R.id.stock_detail_petext);
+        mRevenue = (TextView) view.findViewById(R.id.stock_detail_stockrevenuetext);
+        mTarget = (TextView) view.findViewById(R.id.stock_detail_stockoneyeartarget);
+        mYearHigh = (TextView) view.findViewById(R.id.stock_detail_52wkhightext);
+        mYearLow = (TextView) view.findViewById(R.id.stock_detail_52wklowtext);
 
         oneDayGraphButton = (Button) view.findViewById(R.id.oneday_databutton);
         threeMonthGraphButton = (Button) view.findViewById(R.id.threemonth_databutton);
@@ -158,32 +162,32 @@ public class StockDetailFragment extends Fragment {
         setUpSixMChart();
         checkIfTracked();
 
-      return view;
+        return view;
     }
 
     private void checkIfTracked() {
         //To get id and to correctly display add to portfolio button
-        Cursor cursor = getContext().getContentResolver().query(StockContentProvider.CONTENT_URI,StockDBHelper.ALL_COLUMNS,
-                StockDBHelper.COLUMN_STOCK_SYMBOL + " = ? ", new String[]{stockData.getSymbol().toUpperCase()},null,null);
-       cursor.moveToFirst();
+        Cursor cursor = getContext().getContentResolver().query(StockContentProvider.CONTENT_URI, StockDBHelper.ALL_COLUMNS,
+                StockDBHelper.COLUMN_STOCK_SYMBOL + " = ? ", new String[]{stockData.getSymbol().toUpperCase()}, null, null);
+        cursor.moveToFirst();
         String symbol = "";
-        while (!cursor.isAfterLast()){
+        while (!cursor.isAfterLast()) {
             symbol = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_SYMBOL));
-            if (symbol.equalsIgnoreCase(stockData.getSymbol())){
+            if (symbol.equalsIgnoreCase(stockData.getSymbol())) {
                 isStockInDB = true;
                 break;
             }
             cursor.moveToNext();
         }
 
-        if (isStockInDB){
+        if (isStockInDB) {
             mTrackedFlag = true;
-       //     int counter = cursor.getCount();
+            //     int counter = cursor.getCount();
             //get latest entry, hopefully there's only one.
-         //   cursor.moveToPosition(counter-1);
+            //   cursor.moveToPosition(counter-1);
             stockId = cursor.getInt(cursor.getColumnIndex(StockDBHelper.COLUMN_ID));
             fab.setVisibility(View.GONE);
-            Log.v(StockDetailFragment.class.getName(),"Tracked already: "+ stockData.getSymbol());
+            Log.v(StockDetailFragment.class.getName(), "Tracked already: " + stockData.getSymbol());
 
         } else {
             mTrackedFlag = false;
@@ -194,7 +198,7 @@ public class StockDetailFragment extends Fragment {
             tempInsert.put(StockDBHelper.COLUMN_STOCK_TRACKED, 0);
             Uri uri = getContext().getContentResolver().insert(StockContentProvider.CONTENT_URI, tempInsert);
             stockId = Integer.parseInt(uri.getLastPathSegment());
-            Log.i(StockDetailFragment.class.getName(), "Inserted into database: "+ stockData.getSymbol() + " with id : "+stockId);
+            Log.i(StockDetailFragment.class.getName(), "Inserted into database: " + stockData.getSymbol() + " with id : " + stockId);
 
         }
         cursor.close();
@@ -222,7 +226,7 @@ public class StockDetailFragment extends Fragment {
                 JSONObject intradayInitialObject = new JSONObject(intradayJsonData);
                 JSONObject metaIntradayObject = intradayInitialObject.getJSONObject("meta");
                 companyName = metaIntradayObject.optString("Company-Name", "");
-                mCompanyNameText.setText("("+stockData.getSymbol().toUpperCase()+") "+companyName+" - ");
+                mCompanyNameText.setText("(" + stockData.getSymbol().toUpperCase() + ") " + companyName + " - ");
 
                 JSONArray intradayPricesArray = intradayInitialObject.getJSONArray("series");
                 for (int i = 0; i < intradayPricesArray.length(); i++) {
@@ -247,7 +251,7 @@ public class StockDetailFragment extends Fragment {
     }
 
 
-    private void setUpSixMChart(){
+    private void setUpSixMChart() {
         mChart.setBackgroundColor(Color.WHITE);
         mChart.setDescription("");
 
@@ -312,7 +316,7 @@ public class StockDetailFragment extends Fragment {
         mChart.setData(candleData);
     }
 
-    private void setUpCombinedChart(){
+    private void setUpCombinedChart() {
         mCombinedThreeMChart.setDescription("");
         mCombinedThreeMChart.setBackgroundColor(Color.WHITE);
         mCombinedThreeMChart.setDrawGridBackground(false);
@@ -339,8 +343,8 @@ public class StockDetailFragment extends Fragment {
         CombinedData data = new CombinedData(getPastThreeMonths());
 
         //Temporarily store historical data for easier transition to graph data
-        int counter = historicalStockQuoteWrappers.size()-1;
-        while (mTempHistQuoteList.size() <59){
+        int counter = historicalStockQuoteWrappers.size() - 1;
+        while (mTempHistQuoteList.size() < 59) {
             mTempHistQuoteList.add(0, historicalStockQuoteWrappers.get(counter));
             counter--;
         }
@@ -362,7 +366,7 @@ public class StockDetailFragment extends Fragment {
                 mCombinedThreeMChart.setVisibility(View.GONE);
 
                 if (dailyChartFlag == false) {
-                  setUpDailyChart();
+                    setUpDailyChart();
                 } else {
                 }
             }
@@ -374,7 +378,7 @@ public class StockDetailFragment extends Fragment {
         @Override
         public void onClick(View v) {
             //TODO: animate graph removal and addition with property animation, push it off screen instead of making it come visible
-            if (mCombinedThreeMChart.getVisibility() == View.GONE){
+            if (mCombinedThreeMChart.getVisibility() == View.GONE) {
                 mCombinedThreeMChart.setVisibility(View.VISIBLE);
                 mDailyChart.setVisibility(View.GONE);
                 mFiveMinuteChart.setVisibility(View.GONE);
@@ -386,13 +390,13 @@ public class StockDetailFragment extends Fragment {
         }
     };
 
-    private ArrayList<String> getPastThreeMonths(){
+    private ArrayList<String> getPastThreeMonths() {
         ArrayList<String> threeMonthList = new ArrayList<>();
-        if (historicalStockQuoteWrappers.size() > 0){
+        if (historicalStockQuoteWrappers.size() > 0) {
             int counter = historicalStockQuoteWrappers.size();
-            while (threeMonthList.size() <59){
-                threeMonthList.add(0,historicalStockQuoteWrappers.get(counter-1).getDayOfQuote());
-                counter -=1;
+            while (threeMonthList.size() < 59) {
+                threeMonthList.add(0, historicalStockQuoteWrappers.get(counter - 1).getDayOfQuote());
+                counter -= 1;
             }
             threeMonthList.add(stockData.getDay());
 
@@ -400,14 +404,14 @@ public class StockDetailFragment extends Fragment {
         return threeMonthList;
     }
 
-    private BarData getPastThreeMonthsVolume(){
+    private BarData getPastThreeMonthsVolume() {
         BarData volumeData = new BarData();
 
         ArrayList<BarEntry> entries = new ArrayList<BarEntry>();
 
         if (mTempHistQuoteList.size() > 0) {
-            for (int j = 0; j<mTempHistQuoteList.size() ; j++){
-                entries.add(new BarEntry(mTempHistQuoteList.get(j).getDayVolume(),j));
+            for (int j = 0; j < mTempHistQuoteList.size(); j++) {
+                entries.add(new BarEntry(mTempHistQuoteList.get(j).getDayVolume(), j));
             }
             entries.add(new BarEntry(Float.parseFloat(stockData.getAvgVolBarEntries()), 60));
         }
@@ -424,7 +428,7 @@ public class StockDetailFragment extends Fragment {
         return volumeData;
     }
 
-    private CandleData getPastThreeMonthsPrices(){
+    private CandleData getPastThreeMonthsPrices() {
         List<CandleEntry> dailyCandleData = new LinkedList<>();
         int index = 0;
         while (dailyCandleData.size() < 59) {
@@ -441,15 +445,15 @@ public class StockDetailFragment extends Fragment {
         mPriceAxis = mCombinedThreeMChart.getAxisLeft();
         YAxis volumeAxis = mCombinedThreeMChart.getAxisRight();
         float minPrice = (Float.parseFloat(Collections.min(historicalStockQuoteWrappers).getClosePrice()));
-        if (minPrice <= 20){
+        if (minPrice <= 20) {
             mPriceAxis.setAxisMinValue(0f);
             volumeAxis.setAxisMinValue(0f);
-        } else if (minPrice <= 100 && minPrice > 20){
-            mPriceAxis.setAxisMinValue(minPrice-10);
-        } else if (minPrice <= 300 && minPrice >100){
-            mPriceAxis.setAxisMinValue(minPrice-40);
+        } else if (minPrice <= 100 && minPrice > 20) {
+            mPriceAxis.setAxisMinValue(minPrice - 10);
+        } else if (minPrice <= 300 && minPrice > 100) {
+            mPriceAxis.setAxisMinValue(minPrice - 40);
         } else {
-            mPriceAxis.setAxisMinValue(minPrice-80);
+            mPriceAxis.setAxisMinValue(minPrice - 80);
         }
 
         //Add last session trading data
@@ -477,13 +481,13 @@ public class StockDetailFragment extends Fragment {
     }
 
     //TODO: Concenate strings with placeholders from strings.xml
-    private void setStockData(){
-        mYearLow.setText("52 Week Low: $"+ stockData.getYearLow());
-        mYearHigh.setText("52 Week High: $"+stockData.getYearHigh());
-        mTarget.setText("One Year Target Price: $"+ stockData.getOneYearPriceEstimate());
-        mAvgVol.setText("Average Volume: "+ stockData.getAvgVol());
-        mEPS.setText("EPS: "+stockData.getEps());
-            mDiviYield.setText("Dividend Yield: " + stockData.getDiviYield() + "%");
+    private void setStockData() {
+        mYearLow.setText("52 Week Low: $" + stockData.getYearLow());
+        mYearHigh.setText("52 Week High: $" + stockData.getYearHigh());
+        mTarget.setText("One Year Target Price: $" + stockData.getOneYearPriceEstimate());
+        mAvgVol.setText("Average Volume: " + stockData.getAvgVol());
+        mEPS.setText("EPS: " + stockData.getEps());
+        mDiviYield.setText("Dividend Yield: " + stockData.getDiviYield() + "%");
         mRevenue.setText("Revenue: $" + stockData.getRevenue());
         if (!stockData.getPe().equals(0)) {
             mPE.setText("PE: " + stockData.getPe());
@@ -491,15 +495,15 @@ public class StockDetailFragment extends Fragment {
             mPE.setText("PE: -");
         }
         mMarketCap.setText("Market Cap: $" + stockData.getMarketCap());
-        if (Double.parseDouble(stockData.getDayClose()) > Double.parseDouble(stockData.getDayOpen()) ){
-            mStockTicker.setText("$"+ stockData.getChange() +" +"
-                    + stockData.getPercentChange()+"%" );
-            mPriceText.setText("$"+stockData.getDayClose());
+        if (Double.parseDouble(stockData.getDayClose()) > Double.parseDouble(stockData.getDayOpen())) {
+            mStockTicker.setText("$" + stockData.getChange() + "    +"
+                    + stockData.getPercentChange() + "%");
+            mPriceText.setText("$" + stockData.getDayClose());
             mArrowIcon.setImageResource(R.drawable.arrow_up3);
-        } else if (Double.parseDouble(stockData.getDayClose()) < Double.parseDouble(stockData.getDayOpen()) ){
-            mStockTicker.setText("$"+ stockData.getChange() +" -"
-                    + stockData.getPercentChange()+"%" );
-            mPriceText.setText("$"+stockData.getDayClose());
+        } else if (Double.parseDouble(stockData.getDayClose()) < Double.parseDouble(stockData.getDayOpen())) {
+            mStockTicker.setText("$" + stockData.getChange() + "    "
+                    + stockData.getPercentChange() + "%");
+            mPriceText.setText("$" + stockData.getDayClose());
             mArrowIcon.setImageResource(R.drawable.arrow_down3);
         } else {
 
@@ -515,12 +519,12 @@ public class StockDetailFragment extends Fragment {
     }
 
     //Daily intraday data
-    private void setUpDailyChart(){
+    private void setUpDailyChart() {
         mDailyChart.setDescription("");
         // enable touch gestures
         mDailyChart.setTouchEnabled(true);
         // disable scaling and dragging
-        mDailyChart.setDragEnabled(false);
+        mDailyChart.setDragEnabled(true);
         mDailyChart.setScaleEnabled(true);
         mDailyChart.setPinchZoom(true);
 
@@ -552,9 +556,16 @@ public class StockDetailFragment extends Fragment {
         ll1.setLabel("Open Price: $" + intradayStockDataLinkedList.get(0).getOpenPrice());
 
         YAxis leftAxis = mDailyChart.getAxisLeft();
-        leftAxis.removeAllLimitLines(); // reset all limit lines to avoid overlapping lines
-        leftAxis.addLimitLine(ll1);
-        leftAxis.setDrawLimitLinesBehindData(true);
+       leftAxis.setEnabled(false);
+       // leftAxis.removeAllLimitLines(); // reset all limit lines to avoid overlapping lines
+        //eftAxis.addLimitLine(ll1);
+        //leftAxis.setDrawLimitLinesBehindData(true);
+
+        YAxis rightAxis = mDailyChart.getAxisRight();
+        rightAxis.removeAllLimitLines();
+        rightAxis.addLimitLine(ll1);
+        rightAxis.setDrawLimitLinesBehindData(false);
+
 
         XAxis bottomAxis = mDailyChart.getXAxis();
         bottomAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
@@ -566,17 +577,17 @@ public class StockDetailFragment extends Fragment {
     }
 
     //Separate since intraday data is called from onStart()
-    private void setVolume(){
+    private void setVolume() {
         double totalVolume = 0;
-        String todaysVolume="";
-        if (intradayStockDataLinkedList.size()> 0) {
+        String todaysVolume = "";
+        if (intradayStockDataLinkedList.size() > 0) {
             for (IntradayStockData intradayStockData : intradayStockDataLinkedList) {
                 totalVolume += Long.parseLong(intradayStockData.getVolume());
             }
-            if (totalVolume >=1000000 && totalVolume < 1000000000) {
+            if (totalVolume >= 1000000 && totalVolume < 1000000000) {
                 todaysVolume = String.format("%.2fM", totalVolume / 1000000);
-            } else if (totalVolume >= 1000000000){
-                todaysVolume = String.format("%.2fB", totalVolume/ 1000000000);
+            } else if (totalVolume >= 1000000000) {
+                todaysVolume = String.format("%.2fB", totalVolume / 1000000000);
             } else {
                 todaysVolume = String.valueOf(totalVolume);
             }
@@ -596,10 +607,10 @@ public class StockDetailFragment extends Fragment {
     public void onDestroy() {
         super.onDestroy();
         Cursor cursor = getContext().getContentResolver().query(StockContentProvider.CONTENT_URI, null, StockDBHelper.COLUMN_STOCK_SYMBOL +
-        " = ?",new String[]{stockData.getSymbol().toUpperCase()}, null);
+                " = ?", new String[]{stockData.getSymbol().toUpperCase()}, null);
         int counter = cursor.getCount();
         cursor.moveToPosition(counter - 1);
-        if (cursor.getCount() > 0 && cursor.getInt(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_TRACKED)) == 0){
+        if (cursor.getCount() > 0 && cursor.getInt(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_TRACKED)) == 0) {
             getContext().getContentResolver().delete(StockContentProvider.CONTENT_URI, StockDBHelper.COLUMN_ID + " = ? ",
                     new String[]{String.valueOf(stockId)});
             Log.i("STOCKDETAIL", "Deleted stock symbol: " + stockData.getSymbol());
@@ -611,10 +622,10 @@ public class StockDetailFragment extends Fragment {
     View.OnClickListener clickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            Uri uri = Uri.parse(StockContentProvider.CONTENT_URI+"/"+String.valueOf(stockId));
+            Uri uri = Uri.parse(StockContentProvider.CONTENT_URI + "/" + String.valueOf(stockId));
             ContentValues portfolioStock = new ContentValues();
             portfolioStock.put(StockDBHelper.COLUMN_STOCK_TRACKED, 1);
-            getContext().getContentResolver().update(uri, portfolioStock, null,null);
+            getContext().getContentResolver().update(uri, portfolioStock, null, null);
             Log.i(StockDetailFragment.class.getName(), "Added to tracked stocks: " + stockData.getSymbol().toUpperCase());
             v.setVisibility(View.GONE);
         }
@@ -631,38 +642,74 @@ public class StockDetailFragment extends Fragment {
         public void onChange(boolean selfChange, Uri uri) {
             //do stuff on UI thread
 
-                Log.d("MARKET DATA", "CHANGE OBSERVED AT URI: " + uri);
-                Cursor cursor = getContext().getContentResolver().query(StockContentProvider.CONTENT_URI, null, StockDBHelper.COLUMN_ID
-                        + " = ? ", new String[]{String.valueOf(stockId)}, null);
-                cursor.moveToFirst();
-                String newPrice = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_PRICE));
-                String openPrice = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_OPENPRICE));
-                //Check whether new price is above old price
-                try {
-                    if (MainActivity.checkIfTradingTimeRange(1))
-                        if (Double.parseDouble(newPrice) > Double.parseDouble(openPrice)) {
-                            mPriceText.setText("$" + newPrice);
-                            float priceChange = Float.parseFloat(newPrice) - Float.parseFloat(openPrice);
-                            float percentageChange = (Float.parseFloat(newPrice) - Float.parseFloat(openPrice)) / Float.parseFloat(stockData.getDayOpen()) * 100;
-                            mStockTicker.setText("$" + String.valueOf(priceChange) + " +" + String.valueOf(percentageChange) + "%");
-                            mArrowIcon.setImageResource(R.drawable.arrow_up3);
-                        } else if (Double.parseDouble(newPrice) < Double.parseDouble(openPrice)) {
-                            mPriceText.setText("$" + newPrice);
-                            float priceChange = Math.abs(Float.parseFloat(newPrice) - Float.parseFloat(openPrice));
-                            float percentageChange = (Float.parseFloat(newPrice) - Float.parseFloat(openPrice)) / Float.parseFloat(stockData.getDayOpen()) * 100;
-                            mStockTicker.setText("$" + String.valueOf(priceChange) + " -" + String.valueOf(percentageChange) + "%");
-                            mArrowIcon.setImageResource(R.drawable.arrow_down3);
-                        } else {
-                            mPriceText.setText(newPrice);
-                            mStockTicker.setText("N/C");
-                        }
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-                cursor.close();
-            }
+            Log.d("MARKET DATA", "CHANGE OBSERVED AT URI: " + uri);
+            Uri stockUri = Uri.parse(StockContentProvider.CONTENT_URI + "/" + String.valueOf(stockId));
+            Cursor cursor = getContext().getContentResolver().query(stockUri, null, StockDBHelper.COLUMN_ID
+                    + " = ? ", new String[]{String.valueOf(stockId)}, null);
+            cursor.moveToFirst();
+            String newPrice = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_PRICE));
+            String openPrice = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_OPENPRICE));
+            String volume = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_VOLUME));
+            //Check whether new price is above old price
+            NumberFormat decimalFormat = NumberFormat.getPercentInstance();
+            decimalFormat.setMinimumFractionDigits(2);
+            try {
+                if (MainActivity.checkIfTradingTimeRange(1))
+                    if (Double.parseDouble(newPrice) > Double.parseDouble(openPrice)) {
 
+                        String instantPriceChange = String.valueOf(Float.parseFloat(newPrice) - Float.parseFloat(openPrice));
+                        // String instantPercentageChange = String.valueOf((Float.parseFloat(newPrice) - Float.parseFloat(openPrice))/ Float.parseFloat(stockData.getDayOpen()) * 100);
+                        Double instantPercentageChange = (Double.parseDouble(newPrice) - Double.parseDouble(openPrice)) / Double.parseDouble(openPrice);
+                        mPriceText.setText(NumberFormat.getCurrencyInstance().format(Double.parseDouble(newPrice)));
+                        mStockTicker.setText(DecimalFormat.getCurrencyInstance().format(Double.parseDouble(instantPriceChange))
+                                + "    +" + decimalFormat.format(instantPercentageChange));
+                        mArrowIcon.setImageResource(R.drawable.arrow_up3);
+                    } else if (Double.parseDouble(newPrice) < Double.parseDouble(openPrice)) {
+                        mPriceText.setText("$" + newPrice);
+                        String priceChange = String.valueOf(Math.abs(Float.parseFloat(newPrice) - Float.parseFloat(openPrice)));
+                        // percentageChange = String.valueOf((Float.parseFloat(newPrice) - Float.parseFloat(openPrice)) / Float.parseFloat(stockData.getDayOpen()) * 100);
+                        double percentageChange = (Double.parseDouble(newPrice) - Double.parseDouble(openPrice)) / Double.parseDouble(openPrice);
+                        mStockTicker.setText(DecimalFormat.getCurrencyInstance().format(Double.parseDouble(priceChange))
+                                + "    " + decimalFormat.format(percentageChange));
+                        mArrowIcon.setImageResource(R.drawable.arrow_down3);
+                    } else {
+                        mPriceText.setText(newPrice);
+                        mStockTicker.setText("N/C");
+                    }
+                mVol.setText("Volume: "+volume);
+                updateLineChart(newPrice);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            cursor.close();
+        }
+
+    }
+
+    private void updateLineChart(String newPriceEntry) {
+        LineData data = mDailyChart.getData();
+        String newTimeEntry = IntradayStockData.getCurrentTime();
+        if (data != null) {
+
+            //Retrieve dataset
+            ILineDataSet set = data.getDataSetByIndex(0);
+
+            // add a new x-value first
+            data.addXValue(newTimeEntry);
+
+            // choose a random dataSet
+            int randomDataSetIndex = (int) (Math.random() * data.getDataSetCount());
+
+            data.addEntry(new Entry(Float.parseFloat(newPriceEntry), set.getEntryCount()), randomDataSetIndex);
+
+            // Refreshes data
+            mDailyChart.notifyDataSetChanged();
+
+
+//            // this automatically refreshes the chart (calls invalidate())
+            mDailyChart.moveViewTo(data.getXValCount(), 50f, YAxis.AxisDependency.RIGHT);
         }
     }
+}
 
 

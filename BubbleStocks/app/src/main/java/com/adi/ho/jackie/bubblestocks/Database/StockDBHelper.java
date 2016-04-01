@@ -27,9 +27,10 @@ public class StockDBHelper extends SQLiteOpenHelper {
     public static final String COLUMN_STOCK_PRICE = "price";
     public static final String COLUMN_STOCK_TRACKED = "tracked";
     public static final String COLUMN_STOCK_OPENPRICE = "openprice";
+    public static final String COLUMN_VOLUME = "volume";
 
 
-    public static final String[] ALL_COLUMNS = new String[]{COLUMN_ID, COLUMN_STOCK_SYMBOL, COLUMN_STOCK_PRICE, COLUMN_STOCK_OPENPRICE, COLUMN_STOCK_TRACKED};
+    public static final String[] ALL_COLUMNS = new String[]{COLUMN_ID, COLUMN_STOCK_SYMBOL, COLUMN_STOCK_PRICE, COLUMN_STOCK_OPENPRICE, COLUMN_VOLUME, COLUMN_STOCK_TRACKED};
     public StockDBHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -42,6 +43,7 @@ public class StockDBHelper extends SQLiteOpenHelper {
                 + COLUMN_STOCK_SYMBOL + " TEXT, "
                 + COLUMN_STOCK_PRICE + " TEXT, "
                 + COLUMN_STOCK_OPENPRICE + " TEXT, "
+                + COLUMN_VOLUME + " TEXT, "
                 + COLUMN_STOCK_TRACKED + " INTEGER)";
         db.execSQL(CREATE_PRODUCTS_TABLE);
     }

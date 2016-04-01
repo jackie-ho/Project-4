@@ -3,7 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.adi.ho.jackie.bubblestocks.MainActivity">
+    tools:context="com.adi.ho.jackie.bubblestocks.MainActivity"
+    android:id="@+id/main_activity_rel_layout">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
@@ -21,7 +22,10 @@
         android:layout_marginTop="?attr/actionBarSize"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_centerInParent="true"/>
+        android:layout_centerInParent="true">
+
+    </com.github.mikephil.charting.charts.PieChart>
+
     <FrameLayout
         android:id="@+id/stock_fragmentcontainer"
         android:layout_width="match_parent"
@@ -36,6 +40,29 @@
             android:id="@+id/topnews_fragmentcontainer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"></FrameLayout>
-
     </FrameLayout>
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/testbubble"
+        android:layout_marginLeft="50dp"
+        android:paddingTop="500dp"
+        android:src="@drawable/bubble1"
+        />
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/testbubble2"
+        android:layout_marginLeft="20dp"
+        android:paddingTop="600dp"
+        android:src="@drawable/bubble2"/>
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/testbubble3"
+        android:layout_marginLeft="80dp"
+        android:paddingTop="800dp"
+        android:src="@drawable/bubble3"/>
+
+
 </RelativeLayout>

@@ -97,7 +97,7 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
         } finally {
             dbCursor.close();
             //Threadpool get market data
-            ExecutorService marketThreads = Executors.newFixedThreadPool(2);
+           // ExecutorService marketThreads = Executors.newFixedThreadPool(2);
          //   marketThreads.execute(nasdaqRunnable);
            // marketThreads.execute(spyRunnable);
             //Async task to retrieve "tracked" stocks
@@ -166,6 +166,7 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
                 JSONObject stockObject = new JSONObject(data);
                 stock.setDayOpen(stockObject.getString("Open"));
                 stock.setDayClose(stockObject.getString("LastPrice"));
+                stock.setTodaysVolume(stockObject.getDouble("Volume"));
                 if (stockObject.getString("Status").equals("SUCCESS")) {
                     callSuccess = true;
                 }
@@ -179,6 +180,7 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
                     ContentValues stockValues = new ContentValues();
                     stockValues.put(StockDBHelper.COLUMN_STOCK_PRICE, stock.getDayClose());
                     stockValues.put(StockDBHelper.COLUMN_STOCK_OPENPRICE, stock.getDayOpen());
+                    stockValues.put(StockDBHelper.COLUMN_VOLUME, stock.getTodaysVolume());
                     mContentResolver.update(uri, stockValues, StockDBHelper.COLUMN_ID + " = ? ", new String[]{id});
                 }
             }
@@ -188,7 +190,6 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
-
         }
     }
 
