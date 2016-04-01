@@ -164,11 +164,11 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
                 id = String.valueOf(params[0].getId());
                 data = new MarkitHttpSyncRequest().run(params[0].getSymbol());
                 JSONObject stockObject = new JSONObject(data);
-                stock.setDayOpen(stockObject.getString("Open"));
-                stock.setDayClose(stockObject.getString("LastPrice"));
-                stock.setTodaysVolume(stockObject.getDouble("Volume"));
                 if (stockObject.getString("Status").equals("SUCCESS")) {
                     callSuccess = true;
+                    stock.setDayOpen(stockObject.getString("Open"));
+                    stock.setDayClose(stockObject.getString("LastPrice"));
+                    stock.setTodaysVolume(stockObject.getDouble("Volume"));
                 }
             } catch (IOException e) {
                 e.printStackTrace();

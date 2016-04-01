@@ -5,13 +5,13 @@
 
     <gradient
         android:endColor="#ffff6600"
-        android:gradientRadius="150"
-        android:startColor="#ffffcc00"
+        android:gradientRadius="350"
+        android:startColor="#cbffcc00"
         android:type="radial"
         android:useLevel="false" />
 
     <size
-        android:height="100dp"
-        android:width="100dp" />
+        android:height="60dp"
+        android:width="60dp" />
 
 </shape>

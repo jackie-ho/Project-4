@@ -14,6 +14,7 @@ import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
@@ -32,6 +33,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -98,8 +100,9 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
 
     private PieChart mMainNavigationTool;
     private List<String> fragmentTags;
-    private boolean initialSync =true;
+    private boolean initialSync = true;
     private List<ImageView> bubbleList;
+    private List<Integer> bubbleDrawableList;
     private RelativeLayout mParentLayout;
 
     @Override
@@ -119,12 +122,13 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         autoSyncStocks();
         fragmentTags = Arrays.asList(getResources().getStringArray(R.array.fragment_stack_tag));
         bubbleList = new ArrayList<>();
-
+        bubbleDrawableList = new ArrayList<>();
+        addDrawablestoList();
         //Toolbar search reference
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         mMaterialSearchView = (MaterialSearchView) findViewById(R.id.material_searchview);
         mMainNavigationTool = (PieChart) findViewById(R.id.home_navigationmenu);
-        mParentLayout = (RelativeLayout)findViewById(R.id.main_activity_rel_layout);
+        mParentLayout = (RelativeLayout) findViewById(R.id.main_activity_rel_layout);
 
 
         setSupportActionBar(toolbar);
@@ -195,44 +199,44 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         SharedPreferences settings = getPreferences(Context.MODE_PRIVATE);
         initialSync = settings.getBoolean(INITIAL_START, true);
 
-            Calendar currentTime = Calendar.getInstance();
-            currentTime.setTimeZone(TimeZone.getTimeZone("America/New_York"));
-            SimpleDateFormat tradingTimeRange = new SimpleDateFormat("EEE, dd MMM HH:mm");
-            String dateAndTime = tradingTimeRange.format(currentTime.getTime());
+        Calendar currentTime = Calendar.getInstance();
+        currentTime.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+        SimpleDateFormat tradingTimeRange = new SimpleDateFormat("EEE, dd MMM HH:mm");
+        String dateAndTime = tradingTimeRange.format(currentTime.getTime());
 
-            //Activate or deactive syncadapter based off current time in NY
-            if (dateAndTime.contains("Sat") || dateAndTime.contains("Sun")) {
+        //Activate or deactive syncadapter based off current time in NY
+        if (dateAndTime.contains("Sat") || dateAndTime.contains("Sun")) {
 
+            ContentResolver.setIsSyncable(mAccount, AUTHORITY, 0);
+            ContentResolver.cancelSync(null, null);
+            Log.d("SYNCADAPTER", "Sync canceled");
+
+        } else try {
+            //Check for times between 9 am - 4 pm
+            if (checkIfTradingTimeRange(0)) {
+                if (initialSync) {
+                    ContentResolver.setIsSyncable(mAccount, AUTHORITY, 1);
+                    ContentResolver.setSyncAutomatically(mAccount, AUTHORITY, true);
+                    long seconds = 60;
+                    ContentResolver.addPeriodicSync(mAccount, AUTHORITY, Bundle.EMPTY, seconds);
+                    Log.i(MainActivity.class.getName(), "Sync started, size 1");
+                    //Start sync service once
+                    SharedPreferences.Editor editor = settings.edit();
+                    editor.putBoolean(INITIAL_START, false);
+                    editor.commit();
+                }
+
+            } else {
                 ContentResolver.setIsSyncable(mAccount, AUTHORITY, 0);
                 ContentResolver.cancelSync(null, null);
                 Log.d("SYNCADAPTER", "Sync canceled");
-
-            } else  try {
-                //Check for times between 9 am - 4 pm
-                if (checkIfTradingTimeRange(0)) {
-                    if (initialSync) {
-                        ContentResolver.setIsSyncable(mAccount, AUTHORITY, 1);
-                        ContentResolver.setSyncAutomatically(mAccount, AUTHORITY, true);
-                        long seconds = 60;
-                        ContentResolver.addPeriodicSync(mAccount, AUTHORITY, Bundle.EMPTY, seconds);
-                        Log.i(MainActivity.class.getName(), "Sync started, size 1");
-                        //Start sync service once
-                        SharedPreferences.Editor editor = settings.edit();
-                        editor.putBoolean(INITIAL_START, false);
-                        editor.commit();
-                    }
-
-                } else {
-                    ContentResolver.setIsSyncable(mAccount, AUTHORITY, 0);
-                    ContentResolver.cancelSync(null, null);
-                    Log.d("SYNCADAPTER", "Sync canceled");
-                }
-            } catch (ParseException e) {
-                e.printStackTrace();
             }
-
-
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
+
+
+    }
 
 
     @Override
@@ -367,31 +371,60 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     protected void onResume() {
         super.onResume();
         setTitle("Home");
-        for (int i = 0 ; i < 15; i ++) {
 
-            ImageView image = new ImageView(this);
+
+        for (int i = 0; i < bubbleDrawableList.size(); i++) {
+            int xPadding = (int)(Math.random()*400)+(int)(Math.random()*300);
+            int yPadding = (int)(Math.random()*1000)+1000;
+            int duration = (int)(Math.random()*30000)+13000;
+            final ImageView image = new ImageView(this);
             image.setLayoutParams(new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             image.setMaxHeight(100);
             image.setMaxWidth(100);
-            image.setPadding(5,800,0,0);
-            image.setImageResource();
+            image.setPadding(xPadding, yPadding, 0, 0);
+            image.setImageResource(bubbleDrawableList.get(i));
             // Adds the view to the layout
             mParentLayout.addView(image);
+            float scaley = (float) (Math.random() * 400 + 1200)*-1f;
+            float scalex = (float) (Math.random() * 500 + 100)-(float)(Math.random()*350+50);
+            AnimatorSet aniSet = new AnimatorSet();
+            ObjectAnimator bubbleFloat = ObjectAnimator.ofFloat(image, "y", scaley);
+//            bubbleFloat.setDuration(duration);
+            ObjectAnimator bubbleXAnimate = ObjectAnimator.ofFloat(image, "x", scalex);
+//            bubbleXAnimate.setDuration(duration);
+            aniSet.setInterpolator(new DecelerateInterpolator());
+            aniSet.setDuration(duration);
+            aniSet.play(bubbleFloat).with(bubbleXAnimate);
+            image.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    v.setVisibility(View.GONE);
+                }
+            });
+            aniSet.addListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animation) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    image.setVisibility(View.GONE);
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animation) {
+
+                }
+
+                @Override
+                public void onAnimationRepeat(Animator animation) {
+
+                }
+            });
+        //    aniSet.play(bubbleXAnimate);
+            aniSet.start();
         }
-        //Random movement
-        float scaley  = (float)(Math.random()*2+1000);
-        float scalex = (float)(Math.random()*5+50);
-
-        ObjectAnimator anim1 = ObjectAnimator.ofFloat()
-
-        ImageView bubble = (ImageView)findViewById(R.id.testbubble);
-        ImageView bubble1 = (ImageView)findViewById(R.id.testbubble3);
-        ImageView bubble2 = (ImageView)findViewById(R.id.testbubble2);
-        Animator moveUp = (AnimatorSet) AnimatorInflater.loadAnimator(this, R.animator.bubblespin1);
-        moveUp.setTarget(bubble);
-        moveUp.setTarget(bubble1);
-        moveUp.setTarget(bubble2);
-        moveUp.start();
     }
 
     private void homeNavigationMenu() {
@@ -415,7 +448,6 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         mMainNavigationTool.setTransparentCircleRadius(61f);
 
         mMainNavigationTool.setDrawCenterText(true);
-
         mMainNavigationTool.setRotationAngle(0);
         // enable rotation of the chart by touch
         mMainNavigationTool.setRotationEnabled(true);
@@ -519,7 +551,6 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
                 break;
             case 2:
                 getMarketData();
-                mMainNavigationTool.animateXY(3400, 3400, Easing.EasingOption.EaseOutQuad, Easing.EasingOption.EaseOutQuad);
                 break;
             case 3:
                 Toast.makeText(MainActivity.this, "Notifications", Toast.LENGTH_SHORT).show();
@@ -557,13 +588,13 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     //
     public static boolean checkIfTradingTimeRange(int number) throws ParseException {
         String string1 = "9";
-        String minutes= "30";
+        String minutes = "30";
         SimpleDateFormat startDateTime;
         Calendar calendar1;
         String startTime;
         calendar1 = Calendar.getInstance();
         calendar1.setTimeZone(TimeZone.getTimeZone("America/New_York"));
-        switch (number){
+        switch (number) {
             case 0:
                 startDateTime = new SimpleDateFormat("HH");
                 startTime = startDateTime.format(startDateTime.parse(string1));
@@ -572,7 +603,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
                 break;
             case 1:
                 startDateTime = new SimpleDateFormat("HH:mm");
-                startTime = startDateTime.format(startDateTime.parse(string1+":"+minutes));
+                startTime = startDateTime.format(startDateTime.parse(string1 + ":" + minutes));
                 calendar1.set(Calendar.HOUR_OF_DAY, 9);
                 calendar1.set(Calendar.MINUTE, 31);
                 break;
@@ -596,6 +627,32 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         } else {
             return false;
         }
+    }
+
+    private void addDrawablestoList() {
+        bubbleDrawableList.add(R.drawable.bubble1);
+        bubbleDrawableList.add(R.drawable.bubble2);
+        bubbleDrawableList.add(R.drawable.bubble3);
+        bubbleDrawableList.add(R.drawable.bubble4);
+        bubbleDrawableList.add(R.drawable.bubble5);
+        bubbleDrawableList.add(R.drawable.bubble6);
+        bubbleDrawableList.add(R.drawable.bubble7);
+        bubbleDrawableList.add(R.drawable.bubble8);
+        bubbleDrawableList.add(R.drawable.bubble10);
+        bubbleDrawableList.add(R.drawable.drawable11);
+        bubbleDrawableList.add(R.drawable.bubble9);
+        bubbleDrawableList.add(R.drawable.bubble1);
+        bubbleDrawableList.add(R.drawable.bubble2);
+        bubbleDrawableList.add(R.drawable.bubble3);
+        bubbleDrawableList.add(R.drawable.bubble4);
+        bubbleDrawableList.add(R.drawable.bubble5);
+        bubbleDrawableList.add(R.drawable.bubble6);
+        bubbleDrawableList.add(R.drawable.bubble7);
+        bubbleDrawableList.add(R.drawable.bubble8);
+        bubbleDrawableList.add(R.drawable.bubble10);
+        bubbleDrawableList.add(R.drawable.drawable11);
+        bubbleDrawableList.add(R.drawable.bubble9);
+
     }
 }
 
