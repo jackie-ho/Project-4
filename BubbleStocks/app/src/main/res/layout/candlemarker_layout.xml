@@ -1,26 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:background="#436fff"
+    android:padding="3dp">
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/marker_price"/>
+        android:id="@+id/marker_date"
+        android:textColor="#ffffff"
+        android:textAppearance="?android:attr/textAppearanceSmall"/>
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/marker_openprice"/>
+        android:id="@+id/marker_openprice"
+        android:textColor="#ffffff"
+        android:textAppearance="?android:attr/textAppearanceSmall"/>
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/marker_closeprice"/>
+        android:textColor="#ffffff"
+        android:id="@+id/marker_closeprice"
+        android:textAppearance="?android:attr/textAppearanceSmall"/>
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/marker_highprice"/>
+        android:textColor="#ffffff"
+        android:id="@+id/marker_highprice"
+        android:textAppearance="?android:attr/textAppearanceSmall"/>
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/marker_lowprice"/>
+        android:textColor="#ffffff"
+        android:id="@+id/marker_lowprice"
+        android:textAppearance="?android:attr/textAppearanceSmall"/>
 
 </LinearLayout>

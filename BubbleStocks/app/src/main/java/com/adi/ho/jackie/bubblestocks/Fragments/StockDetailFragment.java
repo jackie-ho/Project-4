@@ -32,6 +32,7 @@ import com.adi.ho.jackie.bubblestocks.R;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.DBStock;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.HistoricalStockQuoteWrapper;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.IntradayStockData;
+import com.adi.ho.jackie.bubblestocks.customviews.CandleCustomMarkerView;
 import com.github.mikephil.charting.charts.CandleStickChart;
 import com.github.mikephil.charting.charts.CombinedChart;
 import com.github.mikephil.charting.charts.LineChart;
@@ -48,8 +49,10 @@ import com.github.mikephil.charting.data.CombinedData;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.interfaces.datasets.ICandleDataSet;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.ColorTemplate;
 
 import org.json.JSONArray;
@@ -327,17 +330,36 @@ public class StockDetailFragment extends Fragment {
                 CombinedChart.DrawOrder.CANDLE, CombinedChart.DrawOrder.BAR, CombinedChart.DrawOrder.LINE, CombinedChart.DrawOrder.BUBBLE, CombinedChart.DrawOrder.SCATTER
         });
 
+        mCombinedThreeMChart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
+            @Override
+            public void onValueSelected(Entry e, int dataSetIndex, Highlight h) {
+                h.getRange();
+                e.getVal();
+                e.getData();
+                if (e instanceof CandleEntry){
+                    mCombinedThreeMChart.setMarkerView(new CandleCustomMarkerView(getContext(),R.layout.candlemarker_layout));
+                }
+            }
+
+            @Override
+            public void onNothingSelected() {
+
+            }
+        });
         YAxis rightAxis = mCombinedThreeMChart.getAxisRight();
         rightAxis.setDrawGridLines(false);
-        rightAxis.setLabelCount(5, true);
+        rightAxis.setLabelCount(3, true);
         rightAxis.setSpaceTop(85f); // sets space top to push volume bars below candles
 
-//        YAxis leftAxis = mCombinedThreeMChart.getAxisLeft();
+        YAxis leftAxis = mCombinedThreeMChart.getAxisLeft();
+        leftAxis.setLabelCount(5, false);
 //        leftAxis.setDrawGridLines(false);
         //leftAxis.setAxisMinValue(0f); // this replaces setStartAtZero(true)
 
         XAxis xAxis = mCombinedThreeMChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setSpaceBetweenLabels(3);
+
 
 
         CombinedData data = new CombinedData(getPastThreeMonths());
@@ -348,8 +370,9 @@ public class StockDetailFragment extends Fragment {
             mTempHistQuoteList.add(0, historicalStockQuoteWrappers.get(counter));
             counter--;
         }
-        data.setData(getPastThreeMonthsVolume());
         data.setData(getPastThreeMonthsPrices());
+        data.setData(getPastThreeMonthsVolume());
+
         mCombinedThreeMChart.setData(data);
         mCombinedThreeMChart.invalidate();
         mCombinedThreeMChart.animateXY(1400, 1400);
@@ -425,6 +448,7 @@ public class StockDetailFragment extends Fragment {
         volumeData.addDataSet(set);
 
         set.setAxisDependency(YAxis.AxisDependency.RIGHT);
+        volumeData.setHighlightEnabled(false);
         return volumeData;
     }
 
@@ -477,6 +501,7 @@ public class StockDetailFragment extends Fragment {
 
 
         CandleData candleData = new CandleData(getPastThreeMonths(), threeMonthCandleSet);
+        candleData.setHighlightEnabled(true);
         return candleData;
     }
 
@@ -676,7 +701,7 @@ public class StockDetailFragment extends Fragment {
                         mPriceText.setText(newPrice);
                         mStockTicker.setText("N/C");
                     }
-                mVol.setText("Volume: "+volume);
+                mVol.setText("Volume: " + volume);
                 updateLineChart(newPrice);
             } catch (ParseException e) {
                 e.printStackTrace();
