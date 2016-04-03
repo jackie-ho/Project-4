@@ -119,7 +119,7 @@ public class MarketDataFragment extends Fragment {
 
         @Override
         public int getViewTypeCount() {
-            return 4; // we have 3 different item-types
+            return 4;
         }
     }
 
@@ -140,6 +140,7 @@ public class MarketDataFragment extends Fragment {
         sets.add(d1);
 
         LineData cd = new LineData(getMonths(), sets);
+        cd.setHighlightEnabled(true);
         return cd;
     }
 
@@ -221,8 +222,6 @@ public class MarketDataFragment extends Fragment {
                 Log.i("CONTENTOBSERVER", "New Price is: "+price);
                 cursor.moveToNext();
             } cursor.close();
-
-
         }
     }
 

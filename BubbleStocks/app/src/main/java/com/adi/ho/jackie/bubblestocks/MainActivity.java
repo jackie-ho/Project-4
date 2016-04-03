@@ -15,6 +15,7 @@ import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
@@ -33,6 +34,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -41,6 +44,7 @@ import android.widget.Toast;
 import com.adi.ho.jackie.bubblestocks.Database.StockContentProvider;
 import com.adi.ho.jackie.bubblestocks.Database.StockDBHelper;
 import com.adi.ho.jackie.bubblestocks.Fragments.MarketDataFragment;
+import com.adi.ho.jackie.bubblestocks.Fragments.PortfolioFragment;
 import com.adi.ho.jackie.bubblestocks.Fragments.StockDetailFragment;
 import com.adi.ho.jackie.bubblestocks.Fragments.StockFragment;
 import com.adi.ho.jackie.bubblestocks.Fragments.TopNewsFragment;
@@ -52,6 +56,7 @@ import com.adi.ho.jackie.bubblestocks.HttpConnections.SpyHttpRequests;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.DBStock;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.HistoricalStockQuoteWrapper;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.MarketData;
+import com.adi.ho.jackie.bubblestocks.customviews.BubbleImageView;
 import com.adi.ho.jackie.bubblestocks.oauth.TradeKingClient;
 import com.github.mikephil.charting.animation.Easing;
 import com.github.mikephil.charting.charts.PieChart;
@@ -77,6 +82,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
@@ -104,6 +111,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     private List<ImageView> bubbleList;
     private List<Integer> bubbleDrawableList;
     private RelativeLayout mParentLayout;
+    private ArrayList<Integer> colors;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,7 +131,6 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         fragmentTags = Arrays.asList(getResources().getStringArray(R.array.fragment_stack_tag));
         bubbleList = new ArrayList<>();
         bubbleDrawableList = new ArrayList<>();
-        addDrawablestoList();
         //Toolbar search reference
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         mMaterialSearchView = (MaterialSearchView) findViewById(R.id.material_searchview);
@@ -367,64 +374,14 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
 
     }
 
+    // ========================================Animation Part =======================================
+
     @Override
     protected void onResume() {
         super.onResume();
         setTitle("Home");
+        animateBubbling();
 
-
-        for (int i = 0; i < bubbleDrawableList.size(); i++) {
-            int xPadding = (int)(Math.random()*400)+(int)(Math.random()*300);
-            int yPadding = (int)(Math.random()*1000)+1000;
-            int duration = (int)(Math.random()*30000)+13000;
-            final ImageView image = new ImageView(this);
-            image.setLayoutParams(new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            image.setMaxHeight(100);
-            image.setMaxWidth(100);
-            image.setPadding(xPadding, yPadding, 0, 0);
-            image.setImageResource(bubbleDrawableList.get(i));
-            // Adds the view to the layout
-            mParentLayout.addView(image);
-            float scaley = (float) (Math.random() * 400 + 1200)*-1f;
-            float scalex = (float) (Math.random() * 500 + 100)-(float)(Math.random()*350+50);
-            AnimatorSet aniSet = new AnimatorSet();
-            ObjectAnimator bubbleFloat = ObjectAnimator.ofFloat(image, "y", scaley);
-//            bubbleFloat.setDuration(duration);
-            ObjectAnimator bubbleXAnimate = ObjectAnimator.ofFloat(image, "x", scalex);
-//            bubbleXAnimate.setDuration(duration);
-            aniSet.setInterpolator(new DecelerateInterpolator());
-            aniSet.setDuration(duration);
-            aniSet.play(bubbleFloat).with(bubbleXAnimate);
-            image.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    v.setVisibility(View.GONE);
-                }
-            });
-            aniSet.addListener(new Animator.AnimatorListener() {
-                @Override
-                public void onAnimationStart(Animator animation) {
-
-                }
-
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    image.setVisibility(View.GONE);
-                }
-
-                @Override
-                public void onAnimationCancel(Animator animation) {
-
-                }
-
-                @Override
-                public void onAnimationRepeat(Animator animation) {
-
-                }
-            });
-        //    aniSet.play(bubbleXAnimate);
-            aniSet.start();
-        }
     }
 
     private void homeNavigationMenu() {
@@ -487,7 +444,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
 
         // add a lot of colors
 
-        ArrayList<Integer> colors = new ArrayList<Integer>();
+       colors = new ArrayList<Integer>();
 
         for (int c : ColorTemplate.VORDIPLOM_COLORS)
             colors.add(c);
@@ -532,20 +489,22 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         s.setSpan(new ForegroundColorSpan(ColorTemplate.getHoloBlue()), s.length() - 6, s.length(), 0);
         return s;
     }
-
+    FragmentManager fragmentManager = getSupportFragmentManager();
     @Override
     public void onValueSelected(Entry e, int dataSetIndex, Highlight h) {
         switch (e.getXIndex()) {
             case 0:
-                Toast.makeText(MainActivity.this, "Portfolio", Toast.LENGTH_SHORT).show();
-                mMainNavigationTool.animateXY(3400, 3400, Easing.EasingOption.EaseOutCirc, Easing.EasingOption.EaseOutCirc);
-
+                //Toast.makeText(MainActivity.this, "Portfolio", Toast.LENGTH_SHORT).show();
+                //mMainNavigationTool.animateXY(3400, 3400, Easing.EasingOption.EaseOutCirc, Easing.EasingOption.EaseOutCirc);
+                PortfolioFragment portfolioFragment = new PortfolioFragment();
+                FragmentTransaction portfolioTransaction = fragmentManager.beginTransaction();
+                portfolioTransaction.replace(R.id.stock_fragmentcontainer, portfolioFragment).addToBackStack(null).commit();
                 break;
             case 1:
                 Toast.makeText(MainActivity.this, "News", Toast.LENGTH_SHORT).show();
                 mMainNavigationTool.animateXY(3400, 3400, Easing.EasingOption.EaseOutCubic, Easing.EasingOption.EaseOutCubic);
                 TopNewsFragment topNewsFragment = new TopNewsFragment();
-                FragmentManager fragmentManager = getSupportFragmentManager();
+
                 FragmentTransaction newsFragmentTransaction = fragmentManager.beginTransaction();
                 newsFragmentTransaction.replace(R.id.topnews_fragmentcontainer, topNewsFragment).addToBackStack(null).commit();
                 break;
@@ -629,30 +588,91 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         }
     }
 
-    private void addDrawablestoList() {
-        bubbleDrawableList.add(R.drawable.bubble1);
-        bubbleDrawableList.add(R.drawable.bubble2);
-        bubbleDrawableList.add(R.drawable.bubble3);
-        bubbleDrawableList.add(R.drawable.bubble4);
-        bubbleDrawableList.add(R.drawable.bubble5);
-        bubbleDrawableList.add(R.drawable.bubble6);
-        bubbleDrawableList.add(R.drawable.bubble7);
-        bubbleDrawableList.add(R.drawable.bubble8);
-        bubbleDrawableList.add(R.drawable.bubble10);
-        bubbleDrawableList.add(R.drawable.drawable11);
-        bubbleDrawableList.add(R.drawable.bubble9);
-        bubbleDrawableList.add(R.drawable.bubble1);
-        bubbleDrawableList.add(R.drawable.bubble2);
-        bubbleDrawableList.add(R.drawable.bubble3);
-        bubbleDrawableList.add(R.drawable.bubble4);
-        bubbleDrawableList.add(R.drawable.bubble5);
-        bubbleDrawableList.add(R.drawable.bubble6);
-        bubbleDrawableList.add(R.drawable.bubble7);
-        bubbleDrawableList.add(R.drawable.bubble8);
-        bubbleDrawableList.add(R.drawable.bubble10);
-        bubbleDrawableList.add(R.drawable.drawable11);
-        bubbleDrawableList.add(R.drawable.bubble9);
 
+    //Generate random sized bubbles and color
+    private GradientDrawable dynamicGenerateBubbleShape(int diameter, int color) {
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setColor(color);
+        drawable.setShape(GradientDrawable.OVAL);
+        drawable.setGradientRadius(150f);
+        drawable.setGradientType(GradientDrawable.RADIAL_GRADIENT);
+        drawable.setDither(true);
+        drawable.setStroke((int) 2, Color.parseColor("#EEEEEE"));
+        drawable.setSize(diameter, diameter);
+        drawable.setAlpha(200);
+        return drawable;
+    }
+
+    private void setupBubbleAnimation(){
+
+        int duration = (int) (Math.random() * 30000) + 13000;
+        int diameter = (int)(Math.random()*70)+30;
+        int randomColor = (int)(Math.random()*colors.size());
+        final BubbleImageView image = new BubbleImageView(this);
+//        image.setImageDrawable(dynamicGenerateBubbleShape(diameter, colors.get(randomColor)));
+        image.setBackground(dynamicGenerateBubbleShape(diameter,colors.get(randomColor)));
+        // Adds the view to the layout
+        mParentLayout.addView(image);
+        float scaley = (float) (Math.random() * 400 + 1600) * 1f;
+        float scalex = (float) (Math.random() * 700 + 60);
+        AnimatorSet aniSet = new AnimatorSet();
+        ObjectAnimator bubbleFloat = ObjectAnimator.ofFloat(image, "y", scaley);
+        ObjectAnimator bubbleXAnimate = ObjectAnimator.ofFloat(image, "x", scalex);
+        ObjectAnimator bubbleFadeIn = ObjectAnimator.ofFloat(image, "alpha", 0f, 1f);
+        aniSet.setInterpolator(new AccelerateDecelerateInterpolator());
+        aniSet.setDuration(duration);
+        aniSet.playTogether(bubbleFloat,bubbleXAnimate,bubbleFadeIn);
+//        aniSet.play(bubbleFloat).with(bubbleXAnimate);
+        image.setOnClickListener(bubblePopListener);
+
+        //Animation listener, pop bubble when it's done
+        aniSet.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                image.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                image.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
+        aniSet.start();
+    }
+
+    View.OnClickListener bubblePopListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            v.setVisibility(View.GONE);
+            if (v.getAnimation() != null) {
+                v.getAnimation().cancel();
+            }
+        }
+    };
+
+    //Animation bubble
+    private void animateBubbling(){
+        Handler animationHandler = new Handler();
+        for (int i = 0; i < 60; i++) {
+            Runnable animationRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    setupBubbleAnimation();
+                }
+            };
+            animationHandler.post(animationRunnable);
+         //   setupBubbleAnimation();
+        }
     }
 }
 

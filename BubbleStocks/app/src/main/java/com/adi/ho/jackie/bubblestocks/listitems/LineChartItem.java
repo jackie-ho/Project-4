@@ -11,16 +11,22 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.adi.ho.jackie.bubblestocks.R;
+import com.adi.ho.jackie.bubblestocks.customviews.MarketCustomMarkerView;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.ChartData;
+import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.highlight.Highlight;
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 
 
-public class LineChartItem extends ChartItem {
+public class LineChartItem extends ChartItem implements OnChartValueSelectedListener {
 
     private Typeface mTf;
+    private LineChart mLineChart;
+    private Context context;
 
     public LineChartItem(ChartData<?> cd, Context c) {
         super(cd);
@@ -38,15 +44,18 @@ public class LineChartItem extends ChartItem {
 
         ViewHolder holder = null;
 
+
         if (convertView == null) {
 
             holder = new ViewHolder();
 
             convertView = LayoutInflater.from(c).inflate(
                     R.layout.list_item_linechart, null);
+            context = convertView.getContext();
             holder.chart = (LineChart) convertView.findViewById(R.id.linechart);
+            mLineChart = holder.chart;
             holder.marketText = (TextView)convertView.findViewById(R.id.market_text);
-
+            mLineChart.setOnChartValueSelectedListener(this);
             convertView.setTag(holder);
 
         } else {
@@ -78,7 +87,6 @@ public class LineChartItem extends ChartItem {
         // set data
         holder.chart.setData((LineData) mChartData);
 
-        // do not forget to refresh the chart
         // holder.chart.invalidate();
         holder.chart.animateX(750);
 
@@ -101,6 +109,16 @@ public class LineChartItem extends ChartItem {
 
 
         return convertView;
+    }
+
+    @Override
+    public void onValueSelected(Entry e, int dataSetIndex, Highlight h) {
+        mLineChart.setMarkerView(new MarketCustomMarkerView(context, R.layout.market_markerview_layout));
+    }
+
+    @Override
+    public void onNothingSelected() {
+
     }
 
     private static class ViewHolder {

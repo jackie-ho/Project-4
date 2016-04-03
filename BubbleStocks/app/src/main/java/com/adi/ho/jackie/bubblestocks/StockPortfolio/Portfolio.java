@@ -10,9 +10,32 @@ import yahoofinance.Stock;
  */
 public class Portfolio {
 
-    private ArrayList<Stock> myStockPortfolio;
+    //Singleton portfolio
+    private ArrayList<PortfolioStock> myStockPortfolio;
+    private static Portfolio instance;
 
-    public Portfolio(){
 
+    private Portfolio() {
+        myStockPortfolio = new ArrayList<>();
     }
+
+    public static Portfolio getInstance() {
+        if (instance == null) {
+            instance = new Portfolio();
+        }
+        return instance;
+    }
+
+    public void initialAddToPortfolio(PortfolioStock stock){
+        myStockPortfolio.add(stock);
+    }
+
+    public ArrayList<PortfolioStock> getMyStockPortfolio(){
+        return myStockPortfolio;
+    }
+
+    public int getPortfolioSize(){
+        return myStockPortfolio.size();
+    }
+
 }

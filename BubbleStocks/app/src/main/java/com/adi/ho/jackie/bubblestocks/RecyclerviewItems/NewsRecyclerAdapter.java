@@ -20,11 +20,17 @@ import java.util.List;
 public class NewsRecyclerAdapter extends RecyclerView.Adapter<NewsRecyclerAdapter.NewsViewHolder> {
 
     private List<Item> topStories;
+    private List<com.adi.ho.jackie.bubblestocks.companyspecificrssfeed.Item> companyStories;
     private Context context;
 
     public NewsRecyclerAdapter(Context context, List<Item> newsStories){
         topStories = newsStories;
         this.context = context;
+    }
+
+    public NewsRecyclerAdapter(List<com.adi.ho.jackie.bubblestocks.companyspecificrssfeed.Item> newsStories, Context context){
+        this.context = context;
+        companyStories = newsStories;
     }
 
     @Override
@@ -36,13 +42,24 @@ public class NewsRecyclerAdapter extends RecyclerView.Adapter<NewsRecyclerAdapte
 
     @Override
     public void onBindViewHolder(NewsViewHolder holder, int position) {
-        holder.mTitleText.setText(topStories.get(position).getTitle());
-        holder.mLinkText.setText(topStories.get(position).getLink());
+        if (topStories != null && topStories.size() > 0 && topStories.get(position) instanceof Item) {
+            holder.mTitleText.setText(topStories.get(position).getTitle());
+            holder.mLinkText.setText(topStories.get(position).getLink());
+        } else {
+            holder.mLinkText.setText(companyStories.get(position).getLink());
+            holder.mTitleText.setText(companyStories.get(position).getTitle());
+
+        }
     }
 
     @Override
     public int getItemCount() {
-        return topStories.size();
+        if (topStories != null && topStories.size() > 0){
+            return topStories.size();
+        }
+        else {
+            return companyStories.size();
+        }
     }
 
     public class NewsViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{

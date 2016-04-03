@@ -8,6 +8,7 @@
     android:layout_height="wrap_content"
     android:layout_marginTop="5dp"
     android:layout_marginBottom="3dp"
+    android:background="#ffffff"
     >
     <TextView
         android:layout_width="wrap_content"
@@ -28,7 +29,8 @@
 <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:background="#ffffff">
 
     <TextView
         android:layout_width="0dp"
@@ -36,7 +38,9 @@
         android:id="@+id/time_ticker"
         android:textSize="10sp"
         android:text="Time stamp"
+        android:textColor="#000000"
         android:layout_weight="0.3"
+        android:paddingLeft="16dp"
         />
 
     <View
@@ -53,6 +57,7 @@
         android:layout_height="10dp"
         android:layout_marginLeft="3dp"
         android:layout_centerVertical="true"
+        android:layout_marginTop="5dp"
         />
     <TextView
         android:id="@+id/stock_detail_ticker"
@@ -84,13 +89,6 @@
             android:animateLayoutChanges="true"
             android:visibility="gone"></com.github.mikephil.charting.charts.CandleStickChart>
 
-        <com.github.mikephil.charting.charts.CandleStickChart
-            android:id="@+id/stock_detail_5mincandlestick"
-            android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:visibility="gone"
-            android:animateLayoutChanges="true"></com.github.mikephil.charting.charts.CandleStickChart>
-
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/stock_detail_1dlinechart"
             android:layout_width="match_parent"
@@ -113,31 +111,33 @@
             <Button
                 android:id="@+id/threemonth_databutton"
 
+                android:text="3M"
+                android:textColor="#FF7878"
+                android:textSize="20sp"
+                android:layout_margin="3dp"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="@drawable/buttonshape1d"
-                android:shadowColor="#A8958D"
-                android:shadowDx="3"
+                android:shadowColor="#E6E6E6"
+                android:shadowDx="0"
                 android:shadowDy="0"
-                android:shadowRadius="5"
-                android:text="3m"
-                android:textColor="#FF3C2E"
-                android:textSize="20sp" />
+                android:shadowRadius="5"/>
 
             <Button
                 android:id="@+id/oneday_databutton"
 
+                android:text="1D"
+                android:textColor="#FF7878"
+                android:textSize="20sp"
+                android:layout_margin="3dp"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="@drawable/buttonshape1d"
-
-                android:shadowColor="#A8958D"
-                android:shadowDx="3"
+                android:shadowColor="#E6E6E6"
+                android:shadowDx="0"
                 android:shadowDy="0"
                 android:shadowRadius="5"
-                android:text="1d"
-                android:textColor="#FF3C2E"
-                android:textSize="20sp" />
+                />
         </LinearLayout>
         <ScrollView
             android:layout_width="match_parent"
@@ -253,6 +253,11 @@
                     android:text="One Year Target: "
                     android:layout_gravity="left"/>
             </LinearLayout>
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/stock_detail_articlelist"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"></android.support.v7.widget.RecyclerView>
         </LinearLayout>
         </ScrollView>
         <android.support.design.widget.FloatingActionButton

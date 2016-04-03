@@ -7,11 +7,14 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.ActionProvider;
 import android.view.LayoutInflater;
@@ -27,11 +30,16 @@ import android.widget.Toast;
 
 import com.adi.ho.jackie.bubblestocks.Database.StockContentProvider;
 import com.adi.ho.jackie.bubblestocks.Database.StockDBHelper;
+import com.adi.ho.jackie.bubblestocks.HttpConnections.CompanySpecificNewsRequest;
 import com.adi.ho.jackie.bubblestocks.MainActivity;
 import com.adi.ho.jackie.bubblestocks.R;
+import com.adi.ho.jackie.bubblestocks.RecyclerviewItems.DividerItemDecoration;
+import com.adi.ho.jackie.bubblestocks.RecyclerviewItems.NewsRecyclerAdapter;
+import com.adi.ho.jackie.bubblestocks.RecyclerviewItems.VerticalSpaceItemDecoration;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.DBStock;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.HistoricalStockQuoteWrapper;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.IntradayStockData;
+import com.adi.ho.jackie.bubblestocks.companyspecificrssfeed.CompanyResult;
 import com.adi.ho.jackie.bubblestocks.customviews.CandleCustomMarkerView;
 import com.github.mikephil.charting.charts.CandleStickChart;
 import com.github.mikephil.charting.charts.CombinedChart;
@@ -54,20 +62,25 @@ import com.github.mikephil.charting.interfaces.datasets.ICandleDataSet;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.ColorTemplate;
+import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TimeZone;
 
 import yahoofinance.Stock;
 
@@ -103,6 +116,7 @@ public class StockDetailFragment extends Fragment {
     private TextView mTarget;
     private TextView mStockTicker;
     private TextView mCompanyNameText;
+    private TextView mTimeStampText;
     private YAxis mPriceAxis;
     private ImageView mArrowIcon;
     public TextView mPriceText;
@@ -111,6 +125,9 @@ public class StockDetailFragment extends Fragment {
     private FloatingActionButton fab;
     private ContentObserver mObserver;
     private boolean isStockInDB;
+    private RecyclerView mRecycler;
+    private NewsRecyclerAdapter mAdapter;
+    private List<com.adi.ho.jackie.bubblestocks.companyspecificrssfeed.Item> mArticleTitleList;
 
 
     @Nullable
@@ -125,7 +142,6 @@ public class StockDetailFragment extends Fragment {
         mStockTicker = (TextView) view.findViewById(R.id.stock_detail_ticker);
         mCompanyNameText = (TextView) view.findViewById(R.id.stock_detail_companyname);
         mChart = (CandleStickChart) view.findViewById(R.id.stock_detail_3mcandlestick);
-        mFiveMinuteChart = (CandleStickChart) view.findViewById(R.id.stock_detail_5mincandlestick);
         mDailyChart = (LineChart) view.findViewById(R.id.stock_detail_1dlinechart);
         mCombinedThreeMChart = (CombinedChart) view.findViewById(R.id.stock_detail_3mcombinedchart);
         mDiviYield = (TextView) view.findViewById(R.id.stock_detail_diviyieldtext);
@@ -138,6 +154,8 @@ public class StockDetailFragment extends Fragment {
         mTarget = (TextView) view.findViewById(R.id.stock_detail_stockoneyeartarget);
         mYearHigh = (TextView) view.findViewById(R.id.stock_detail_52wkhightext);
         mYearLow = (TextView) view.findViewById(R.id.stock_detail_52wklowtext);
+        mTimeStampText = (TextView)view.findViewById(R.id.time_ticker);
+        mRecycler = (RecyclerView)view.findViewById(R.id.stock_detail_articlelist);
 
         oneDayGraphButton = (Button) view.findViewById(R.id.oneday_databutton);
         threeMonthGraphButton = (Button) view.findViewById(R.id.threemonth_databutton);
@@ -145,6 +163,7 @@ public class StockDetailFragment extends Fragment {
         mXAxisDays = new ArrayList<>();
         intradayStockDataLinkedList = new LinkedList<>();
         mTempHistQuoteList = new ArrayList<>();
+        mArticleTitleList = new ArrayList<>();
 
         mChart.setAutoScaleMinMaxEnabled(true);
         Bundle stockInfo = getArguments();
@@ -168,6 +187,7 @@ public class StockDetailFragment extends Fragment {
         return view;
     }
 
+    //Check if the stock is already "tracked"
     private void checkIfTracked() {
         //To get id and to correctly display add to portfolio button
         Cursor cursor = getContext().getContentResolver().query(StockContentProvider.CONTENT_URI, StockDBHelper.ALL_COLUMNS,
@@ -178,7 +198,7 @@ public class StockDetailFragment extends Fragment {
             symbol = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_SYMBOL));
             if (symbol.equalsIgnoreCase(stockData.getSymbol())) {
                 isStockInDB = true;
-                break;
+                return;
             }
             cursor.moveToNext();
         }
@@ -213,6 +233,42 @@ public class StockDetailFragment extends Fragment {
         oneDayGraphButton.setOnClickListener(oneDayListener);
         threeMonthGraphButton.setOnClickListener(threeMonthListener);
         fab.setOnClickListener(clickListener);
+        if (stockData != null) {
+            new RetrieveCompanyArticlesAsyncTask().execute(stockData.getSymbol());
+        }
+    }
+
+    //==============================Async Task recall articles=======================================
+
+    private class RetrieveCompanyArticlesAsyncTask extends AsyncTask<String, Void, String>{
+
+
+        @Override
+        protected String doInBackground(String... params) {
+            String data = "";
+            //Do it
+            try {
+                data =  new CompanySpecificNewsRequest().run(params[0]);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return data;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            Gson gson = new Gson();
+            CompanyResult finalResult = gson.fromJson(s, CompanyResult.class);
+            mArticleTitleList = finalResult.getQuery().getResults().getItem();
+            mRecycler.setHasFixedSize(true);
+            LinearLayoutManager llm = new LinearLayoutManager(getContext());
+            mRecycler.setLayoutManager(llm);
+            mAdapter = new NewsRecyclerAdapter(mArticleTitleList, getContext());
+            mRecycler.addItemDecoration(new VerticalSpaceItemDecoration(40));
+            mRecycler.addItemDecoration(new DividerItemDecoration(getContext()));
+            mRecycler.setAdapter(mAdapter);
+        }
     }
 
     @Override
@@ -348,7 +404,7 @@ public class StockDetailFragment extends Fragment {
         });
         YAxis rightAxis = mCombinedThreeMChart.getAxisRight();
         rightAxis.setDrawGridLines(false);
-        rightAxis.setLabelCount(3, true);
+        rightAxis.setLabelCount(4, true);
         rightAxis.setSpaceTop(85f); // sets space top to push volume bars below candles
 
         YAxis leftAxis = mCombinedThreeMChart.getAxisLeft();
@@ -385,7 +441,6 @@ public class StockDetailFragment extends Fragment {
             if (mDailyChart.getVisibility() == View.GONE) {
                 mDailyChart.setVisibility(View.VISIBLE);
                 mChart.setVisibility(View.GONE);
-                mFiveMinuteChart.setVisibility(View.GONE);
                 mCombinedThreeMChart.setVisibility(View.GONE);
 
                 if (dailyChartFlag == false) {
@@ -404,7 +459,6 @@ public class StockDetailFragment extends Fragment {
             if (mCombinedThreeMChart.getVisibility() == View.GONE) {
                 mCombinedThreeMChart.setVisibility(View.VISIBLE);
                 mDailyChart.setVisibility(View.GONE);
-                mFiveMinuteChart.setVisibility(View.GONE);
                 mChart.setVisibility(View.GONE);
                 setUpCombinedChart();
 
@@ -702,6 +756,7 @@ public class StockDetailFragment extends Fragment {
                         mStockTicker.setText("N/C");
                     }
                 mVol.setText("Volume: " + volume);
+                mTimeStampText.setText(getCurrentTime());
                 updateLineChart(newPrice);
             } catch (ParseException e) {
                 e.printStackTrace();
@@ -734,6 +789,14 @@ public class StockDetailFragment extends Fragment {
 //            // this automatically refreshes the chart (calls invalidate())
             mDailyChart.moveViewTo(data.getXValCount(), 50f, YAxis.AxisDependency.RIGHT);
         }
+    }
+
+    //For timestamp
+    private String getCurrentTime(){
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+        SimpleDateFormat sdf = new SimpleDateFormat("MM-dd HH:mm:ss");
+        return "Timestamp:" + sdf.format(calendar.getTime());
     }
 }
 

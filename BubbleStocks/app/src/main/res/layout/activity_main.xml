@@ -4,10 +4,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.adi.ho.jackie.bubblestocks.MainActivity"
-    android:id="@+id/main_activity_rel_layout">
+    android:id="@+id/main_activity_rel_layout"
+    android:animationCache="true"
+    android:drawingCacheQuality="low">
 <FrameLayout
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:id="@+id/toolbar_container"
+    >
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
@@ -24,7 +28,9 @@
         android:layout_marginTop="?attr/actionBarSize"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_centerInParent="true">
+        android:layout_centerInParent="true"
+        android:layout_below="@id/toolbar_container"
+        >
 
     </com.github.mikephil.charting.charts.PieChart>
 
@@ -33,6 +39,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="?attr/actionBarSize">
+
         <FrameLayout
             android:id="@+id/marketdata_fragmentcontainer"
             android:layout_width="match_parent"

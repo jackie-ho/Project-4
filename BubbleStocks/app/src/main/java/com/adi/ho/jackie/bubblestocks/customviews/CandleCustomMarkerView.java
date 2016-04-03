@@ -37,8 +37,8 @@ public class CandleCustomMarkerView extends MarkerView {
         String lowPrice = "Low: " + candleEntry.getLow();
         String openPrice = "Open: " + candleEntry.getOpen();
         String closePrice = "Close: " + candleEntry.getClose();
-        mHigh.setText(highPrice);
-        mLow.setText(lowPrice);
+        mHigh.setText(lowPrice); //Entries are reversed?
+        mLow.setText(highPrice);
         mOpen.setText(openPrice);
         mClose.setText(closePrice);
 
