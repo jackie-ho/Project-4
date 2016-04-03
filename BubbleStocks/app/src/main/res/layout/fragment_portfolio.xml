@@ -4,7 +4,22 @@
     android:layout_height="match_parent"
     tools:context="com.adi.ho.jackie.bubblestocks.Fragments.PortfolioFragment"
     android:background="#ffffff"
-    android:id="@+id/portfolio_container">
+    >
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/portfolio_container"
+        android:background="#fdd7d7"></RelativeLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="testing"
+        android:background="#424242"
+        android:textColor="#ffffff"
+        android:gravity="center"/>
+
+
 
     <!-- TODO: Update blank fragment layout -->
     <!--<android.support.v7.widget.RecyclerView-->

@@ -704,7 +704,8 @@ public class StockDetailFragment extends Fragment {
             Uri uri = Uri.parse(StockContentProvider.CONTENT_URI + "/" + String.valueOf(stockId));
             ContentValues portfolioStock = new ContentValues();
             portfolioStock.put(StockDBHelper.COLUMN_STOCK_TRACKED, 1);
-            getContext().getContentResolver().update(uri, portfolioStock, null, null);
+            getContext().getContentResolver().update(uri, portfolioStock,
+                    StockDBHelper.COLUMN_ID + " = ? ", new String[]{String.valueOf(stockId)});
             Log.i(StockDetailFragment.class.getName(), "Added to tracked stocks: " + stockData.getSymbol().toUpperCase());
             v.setVisibility(View.GONE);
         }

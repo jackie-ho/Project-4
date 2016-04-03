@@ -50,8 +50,13 @@ public class StockContentProvider extends ContentProvider {
                 cursor = dbHelper.getStockPriceChange(uri, projection, selection, selectionArgs, sortOrder);
                 break;
             case STOCK:
-                cursor = dbHelper.getAllStocks();
-                break;
+                if (selection != null && selectionArgs != null && selectionArgs.length > 0){
+                    cursor = dbHelper.getTrackedStocks();
+                    break;
+                } else {
+                    cursor = dbHelper.getAllStocks();
+                    break;
+                }
             default:
                 throw new IllegalArgumentException("Unknown URI");
         }
@@ -108,6 +113,8 @@ public class StockContentProvider extends ContentProvider {
                 rowsUpdated = dbHelper.updateStockById(uri.getLastPathSegment(), values, selection, selectionArgs);
                 Log.d(StockContentProvider.class.getName(), "Triggered update at row: "+ rowsUpdated + " uri last path segment: "+ uri.getLastPathSegment());
                 break;
+            case STOCK:
+
             default:
                 throw new IllegalArgumentException("Unknown URI: " + uri);
         }

@@ -280,11 +280,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
                 StockDetailFragment stockDetailFragment = new StockDetailFragment();
                 FragmentManager fragmentManager = getSupportFragmentManager();
                 FragmentTransaction stockTransaction = fragmentManager.beginTransaction();
-//                ContentValues tempInsert = new ContentValues();
-//                tempInsert.put(StockDBHelper.COLUMN_STOCK_SYMBOL, searchedStock.getSymbol().toUpperCase());
-//                tempInsert.put(StockDBHelper.COLUMN_STOCK_PRICE, searchedStock.getQuote().getPrice().toString());
-//                tempInsert.put(StockDBHelper.COLUMN_STOCK_TRACKED, 0);
-//                getContentResolver().insert(StockContentProvider.CONTENT_URI, tempInsert);
+
                 Bundle stockBundle = new Bundle();
                 stockBundle.putParcelable("EXSTOCK", parcelingStock);
                 stockBundle.putParcelableArrayList("HISTORICALQUOTE", historicalQuoteList);
@@ -296,7 +292,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     }
 
     // ============================Convert Stock object to Parcelable objects for fragments==========================
-    private DBStock setStockInfo(Stock stock) {
+    public static DBStock setStockInfo(Stock stock) {
         DBStock anyStock = new DBStock();
         SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy");
         Calendar c = Calendar.getInstance();

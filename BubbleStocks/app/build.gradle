@@ -40,4 +40,5 @@ dependencies {
     compile 'com.android.support:support-v4:23.2.1'
     compile 'com.github.scribejava:scribejava-apis:2.4.0'
     compile 'org.jsoup:jsoup:1.8.3'
+    compile 'com.github.nirhart:parallaxscroll:1.0'
 }

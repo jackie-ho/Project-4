@@ -7,34 +7,61 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
+import android.widget.RelativeLayout;
 
 import com.adi.ho.jackie.bubblestocks.Database.StockContentProvider;
 import com.adi.ho.jackie.bubblestocks.Database.StockDBHelper;
+import com.adi.ho.jackie.bubblestocks.HttpConnections.IntradayMarketDataRequest;
+import com.adi.ho.jackie.bubblestocks.MainActivity;
 import com.adi.ho.jackie.bubblestocks.R;
+import com.adi.ho.jackie.bubblestocks.StockPortfolio.DBStock;
+import com.adi.ho.jackie.bubblestocks.StockPortfolio.HistoricalStockQuoteWrapper;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.Portfolio;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.PortfolioStock;
 import com.adi.ho.jackie.bubblestocks.customviews.PortfolioBubble;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Calendar;
+
+import yahoofinance.Stock;
+import yahoofinance.YahooFinance;
+import yahoofinance.histquotes.HistoricalQuote;
+import yahoofinance.histquotes.Interval;
 
 
 public class PortfolioFragment extends Fragment {
 
     private RecyclerView mStockPortfolioRecycler;
-    private FrameLayout mFrameContainer;
+    private RelativeLayout mFrameContainer;
     private Portfolio mPortfolio;
+    private int width;
+    private int height;
 
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_portfolio,container,false);
-        mFrameContainer = (FrameLayout)view.findViewById(R.id.portfolio_container);
-
+        mFrameContainer = (RelativeLayout)view.findViewById(R.id.portfolio_container);
+        mFrameContainer.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return true;
+            }
+        });
         mPortfolio = Portfolio.getInstance();
 //        mStockPortfolioRecycler = (RecyclerView)view.findViewById(R.id.stock_portfolio_recyclerview);
 //        mStockPortfolioRecycler.setHasFixedSize(true);
@@ -45,6 +72,10 @@ public class PortfolioFragment extends Fragment {
         //Find out the tracked stocks
         if (mPortfolio.getPortfolioSize() == 0 ){
             new CreateTrackedStocksAsyncTask().execute();
+        } else {
+            for (PortfolioStock portfolioStock : mPortfolio.getMyStockPortfolio()){
+                generateBubbles(portfolioStock);
+            }
         }
         return view;
     }
@@ -52,6 +83,12 @@ public class PortfolioFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
+        //Set bounds for dragging
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
+        wm.getDefaultDisplay().getMetrics(displayMetrics);
+        width = displayMetrics.widthPixels;
+        height = displayMetrics.heightPixels;
 
     }
 
@@ -89,12 +126,15 @@ public class PortfolioFragment extends Fragment {
 
         }
 
-        private void generateBubbles(PortfolioStock trackedStock){
-            PortfolioBubble bubble = new PortfolioBubble(getContext());
-            bubble.setmSymbol(trackedStock.getmSymbol());
-            bubble.setmPrice(trackedStock.getmPrice());
-            mFrameContainer.addView(bubble);
 
-        }
     }
+    private void generateBubbles(PortfolioStock trackedStock){
+        PortfolioBubble bubble = new PortfolioBubble(getContext(),getActivity().getSupportFragmentManager());
+        bubble.setmSymbol(trackedStock.getmSymbol());
+        bubble.setmPrice(trackedStock.getmPrice(), trackedStock.getmOpenPrice());
+        // bubble.setOnTouchListener(dragBubbleListener);
+        mFrameContainer.addView(bubble);
+
+    }
+
 }
