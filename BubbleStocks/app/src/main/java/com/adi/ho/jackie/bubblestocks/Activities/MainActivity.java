@@ -4,12 +4,17 @@ import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.animation.Animator;
+import android.app.Notification;
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -28,6 +33,7 @@ import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StyleSpan;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -52,6 +58,7 @@ import com.adi.ho.jackie.bubblestocks.httpconnections.NasdaqHttpRequest;
 import com.adi.ho.jackie.bubblestocks.httpconnections.NyseHttpRequest;
 import com.adi.ho.jackie.bubblestocks.httpconnections.SearchSuggestionHttpRequest;
 import com.adi.ho.jackie.bubblestocks.httpconnections.SpyHttpRequests;
+import com.adi.ho.jackie.bubblestocks.network.NetworkUtil;
 import com.adi.ho.jackie.bubblestocks.stockportfolio.DBStock;
 import com.adi.ho.jackie.bubblestocks.stockportfolio.HistoricalStockQuoteWrapper;
 import com.adi.ho.jackie.bubblestocks.stockportfolio.PortfolioStock;
@@ -103,6 +110,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     private static final String INITIAL_START = "Initialized";
     private static final String SYNC_STARTED = "SYNC_START";
 
+    private ConnectionBroadcastReceiver mBroadcastReceiver;
     Account mAccount;
     ContentResolver mResolver;
     Toolbar toolbar;
@@ -139,6 +147,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         bubbleDrawableList = new ArrayList<>();
         listSymbols = new ArrayList<>();
         client = new OkHttpClient();
+        mBroadcastReceiver = new ConnectionBroadcastReceiver();
         //Toolbar search reference
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         mMaterialSearchView = (MaterialSearchView) findViewById(R.id.material_searchview);
@@ -151,49 +160,58 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
 
         //Search for stocks
         mMaterialSearchView.setHint("Enter stock symbol.");
-        mMaterialSearchView.setOnQueryTextListener(new MaterialSearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                final String stockSymbol = query;
+        mMaterialSearchView.setOnQueryTextListener(msvListener);
 
-                //callStockDataFromLastHalfYear(stockSymbol);
-                Runnable searchStockRunnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        Stock stockSearch = null;
-                        try {
-                            stockSearch = YahooFinance.get(stockSymbol);
-                            if (stockSearch != null) {
-                                selectedStock(stockSearch);
-                                Log.i("STOCKSEARCH", "Searched for " + stockSymbol);
-                            } else {
-                                Toast.makeText(MainActivity.this, "Invalid Stock Symbol", Toast.LENGTH_SHORT).show();
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            Toast.makeText(MainActivity.this, "Invalid Stock Symbol", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                };
-                Thread stockSearchThread = new Thread(searchStockRunnable);
-                stockSearchThread.start();
-                mMaterialSearchView.closeSearch();
-                return true;
 
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                if (newText.length() > 0) {
-                    new SearchAsynctask().execute(newText);
-                }
-                return true;
-            }
-        });
 
         //Create nav menu
         homeNavigationMenu();
+
+        //Register broadcast receiver;
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
+            registerReceiver(mBroadcastReceiver, filter);
     }
+
+    MaterialSearchView.OnQueryTextListener msvListener = new MaterialSearchView.OnQueryTextListener() {
+        @Override
+        public boolean onQueryTextSubmit(String query) {
+            final String stockSymbol = query;
+
+            //callStockDataFromLastHalfYear(stockSymbol);
+            Runnable searchStockRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    Stock stockSearch = null;
+                    try {
+                        stockSearch = YahooFinance.get(stockSymbol);
+                        if (stockSearch != null) {
+                            selectedStock(stockSearch);
+                            Log.i("STOCKSEARCH", "Searched for " + stockSymbol);
+                        } else {
+                            Toast.makeText(MainActivity.this, "Invalid Stock Symbol", Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        Toast.makeText(MainActivity.this, "Invalid Stock Symbol", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            };
+            Thread stockSearchThread = new Thread(searchStockRunnable);
+            stockSearchThread.start();
+            mMaterialSearchView.closeSearch();
+            return true;
+
+        }
+
+        @Override
+        public boolean onQueryTextChange(String newText) {
+            if (newText.length() > 0) {
+                new SearchAsynctask().execute(newText);
+            }
+            return true;
+        }
+    };
 
     //Create default account
     public static Account createSyncAccount(Context context) {
@@ -486,8 +504,12 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
 
         colors.add(ColorTemplate.getHoloBlue());
 
-
-        dataSet.setColors(colors);
+        ArrayList<Integer> navWheelColors = new ArrayList<>();
+        navWheelColors.add(ContextCompat.getColor(this,R.color.navWheelColor1));
+        navWheelColors.add(ContextCompat.getColor(this,R.color.navWheelColor2));
+        navWheelColors.add(ContextCompat.getColor(this,R.color.navWheelColor3));
+        navWheelColors.add(ContextCompat.getColor(this,R.color.navWheelColor4));
+        dataSet.setColors(navWheelColors);
 
         PieData data = new PieData(xVals, dataSet);
         data.setValueFormatter(new PercentFormatter());
@@ -505,12 +527,12 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     private SpannableString generateCenterSpannableText() {
 
         SpannableString s = new SpannableString("Bubble \n Stocks");
-        s.setSpan(new RelativeSizeSpan(1.7f), 0, 6, 0);
+        s.setSpan(new RelativeSizeSpan(2.1f), 0, 6, 0);
         s.setSpan(new StyleSpan(Typeface.NORMAL), 6, s.length() - 6, 0);
-        s.setSpan(new ForegroundColorSpan(Color.GRAY), 6, s.length() - 6, 0);
-        s.setSpan(new RelativeSizeSpan(.8f), 6, s.length() - 6, 0);
-        s.setSpan(new StyleSpan(Typeface.ITALIC), s.length() - 6, s.length(), 0);
-        s.setSpan(new ForegroundColorSpan(ColorTemplate.getHoloBlue()), s.length() - 6, s.length(), 0);
+        s.setSpan(new ForegroundColorSpan(Color.GRAY), 0,  6, 0);
+        s.setSpan(new RelativeSizeSpan(1.9f), 9, s.length() - 6, 0);
+        s.setSpan(new StyleSpan(Typeface.ITALIC), s.length() - 6, s.length()-5, 0);
+        s.setSpan(new ForegroundColorSpan(Color.RED), s.length() - 6, s.length(), 0);
         return s;
     }
 
@@ -528,7 +550,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
                 portfolioTransaction.replace(R.id.stock_fragmentcontainer, portfolioFragment).addToBackStack("PORTFOLIO").commit();
                 break;
             case 1:
-                mMainNavigationTool.animateXY(3400, 3400, Easing.EasingOption.EaseOutCubic, Easing.EasingOption.EaseOutCubic);
+              //  mMainNavigationTool.animateXY(3400, 3400, Easing.EasingOption.EaseOutCubic, Easing.EasingOption.EaseOutCubic);
                 TopNewsFragment topNewsFragment = new TopNewsFragment();
 
                 FragmentTransaction newsFragmentTransaction = fragmentManager.beginTransaction();
@@ -538,8 +560,8 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
                 getMarketData();
                 break;
             case 3:
-                Toast.makeText(MainActivity.this, "Notifications", Toast.LENGTH_SHORT).show();
-                mMainNavigationTool.animateXY(3400, 3400, Easing.EasingOption.EaseOutElastic, Easing.EasingOption.EaseOutElastic);
+                Toast.makeText(MainActivity.this, "Currently disabled.", Toast.LENGTH_SHORT).show();
+                //mMainNavigationTool.animateXY(3400, 3400, Easing.EasingOption.EaseOutElastic, Easing.EasingOption.EaseOutElastic);
                 break;
         }
     }
@@ -636,20 +658,17 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         Random randColor = new Random();
         final BubbleImageView image = new BubbleImageView(this);
 //        image.setImageDrawable(dynamicGenerateBubbleShape(diameter, colors.get(randomColor)));
-        image.setBackground(dynamicGenerateBubbleShape(diameter,colors.get(randColor.nextInt(colors.size()))));
+        image.setBackground(dynamicGenerateBubbleShape(diameter, colors.get(randColor.nextInt(colors.size()))));
         // Adds the view to the layout
         mParentLayout.addView(image);
         //TODO: change to width and height of screen
-        float scaley = (float) (Math.random() * 1600 + 200) * 1f;
-        float scalex = (float) (Math.random() * 950 + 20);
-//        AnimatorSet aniSet = new AnimatorSet();
-//        ObjectAnimator bubbleFloat = ObjectAnimator.ofFloat(image, "y", scaley);
-//        ObjectAnimator bubbleXAnimate = ObjectAnimator.ofFloat(image, "x", scalex);
-//        ObjectAnimator bubbleFadeIn = ObjectAnimator.ofFloat(image, "alpha", 0f, 1f);
-//        aniSet.setInterpolator(new AccelerateDecelerateInterpolator());
-//        aniSet.setDuration(duration);
-//        aniSet.playTogether(bubbleFloat, bubbleXAnimate, bubbleFadeIn);
-//        aniSet.play(bubbleFloat).with(bubbleXAnimate);
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        int height = metrics.heightPixels;
+        int width = metrics.widthPixels;
+        float scaley = (float) (Math.random() * height + 150) * 1f;
+        float scalex = (float) (Math.random() * width + 20);
+
         image.setOnClickListener(bubblePop);
         image.animate().setInterpolator(new AccelerateDecelerateInterpolator())
                 .alpha(1)
@@ -780,32 +799,32 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         }
     }
 
-//    private void checkMarshPermissions(){
-//        if (ContextCompat.checkSelfPermission(MainActivity.this,
-//                Manifest.permission.READ_CONTACTS)
-//                != PackageManager.PERMISSION_GRANTED) {
-//
-//            // Should we show an explanation?
-//            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-//                    Manifest.permission.READ_CONTACTS)) {
-//
-//                // Show an expanation to the user *asynchronously* -- don't block
-//                // this thread waiting for the user's response! After the user
-//                // sees the explanation, try again to request the permission.
-//
-//            } else {
-//
-//                // No explanation needed, we can request the permission.
-//
-//                ActivityCompat.requestPermissions(MainActivity.this,
-//                        new String[]{Manifest.permission.READ_CONTACTS},
-//                        MY_PERMISSIONS_REQUEST_READ_CONTACTS);
-//
-//                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-//                // app-defined int constant. The callback method gets the
-//                // result of the request.
-//            }
-//        }
-//    }
+    //broadcast detect network availability
+    public class ConnectionBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int status = NetworkUtil.getConnectivityStatusString(context);
+            if (!"android.intent.action.BOOT_COMPLETED".equals(intent.getAction())) {
+
+                if (status == NetworkUtil.NETWORK_STATUS_NOT_CONNECTED) {
+                    mMaterialSearchView.setOnQueryTextListener(null);
+                    mMainNavigationTool.setOnChartValueSelectedListener(null);
+                    Toast.makeText(MainActivity.this, "Connection lost.", Toast.LENGTH_SHORT).show();
+
+
+                } else {
+                    mMaterialSearchView.setOnQueryTextListener(msvListener);
+                    mMainNavigationTool.setOnChartValueSelectedListener(MainActivity.this);
+                }
+            }
+        }
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mBroadcastReceiver);
+    }
 }
 

@@ -3,11 +3,14 @@ package com.adi.ho.jackie.bubblestocks.recyclerviewitems;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.adi.ho.jackie.bubblestocks.activities.ArticleActivity;
 import com.adi.ho.jackie.bubblestocks.R;
@@ -80,9 +83,18 @@ public class NewsRecyclerAdapter extends RecyclerView.Adapter<NewsRecyclerAdapte
 
         @Override
         public void onClick(View v) {
-            Intent intent = new Intent(context, ArticleActivity.class);
-            intent.putExtra("LINK", mLinkText.getText().toString());
-            context.startActivity(intent);
+
+            //Connection check before clicking articles
+            ConnectivityManager cm = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+            boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+            if (isConnected) {
+                Intent intent = new Intent(context, ArticleActivity.class);
+                intent.putExtra("LINK", mLinkText.getText().toString());
+                context.startActivity(intent);
+            } else {
+                Toast.makeText(context, "Connection not detected. Please reconnect.", Toast.LENGTH_SHORT).show();
+            }
             }
     }
 }

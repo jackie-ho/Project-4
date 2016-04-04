@@ -5,4 +5,9 @@
     <color name="colorAccent">#fc0056</color>
     <color name="colorCandleDecreasing">#ff8484</color>
     <color name="colorCandleIncreasing">#a5ff87</color>
+    <color name="colorBlueDailyLine">#6db8ff</color>
+    <color name="navWheelColor1">#d75050</color>
+    <color name="navWheelColor2">#c467b0</color>
+    <color name="navWheelColor3">#55559e</color>
+    <color name="navWheelColor4">#46972f</color>
 </resources>

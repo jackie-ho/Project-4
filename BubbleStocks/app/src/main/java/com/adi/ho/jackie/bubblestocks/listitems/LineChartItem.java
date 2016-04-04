@@ -56,6 +56,7 @@ public class LineChartItem extends ChartItem implements OnChartValueSelectedList
             mLineChart = holder.chart;
             holder.marketText = (TextView)convertView.findViewById(R.id.market_text);
             mLineChart.setOnChartValueSelectedListener(this);
+
             convertView.setTag(holder);
 
         } else {

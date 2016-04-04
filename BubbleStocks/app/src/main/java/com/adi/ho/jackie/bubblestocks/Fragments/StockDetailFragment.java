@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -541,11 +542,9 @@ public class StockDetailFragment extends Fragment {
             entries.add(new BarEntry(Float.parseFloat(stockData.getAvgVolBarEntries()), 60));
         }
         BarDataSet set = new BarDataSet(entries, "Volume");
-        set.setColor(Color.rgb(60, 220, 78));
-        set.setValueTextColor(Color.rgb(60, 220, 78));
-        set.setValueTextSize(10f);
-
+        set.setColor(Color.rgb(255, 228, 181));
         set.setDrawValues(false);
+
 
         volumeData.addDataSet(set);
 
@@ -667,12 +666,16 @@ public class StockDetailFragment extends Fragment {
         }
 
         //set graph properties
-        LineDataSet intradayDataSet = new LineDataSet(dailyEntries, "Daily");
+        LineDataSet intradayDataSet = new LineDataSet(dailyEntries, "");
         intradayDataSet.setLineWidth(2.5f);
         intradayDataSet.setHighLightColor(Color.rgb(244, 117, 117));
-        intradayDataSet.setColor(ColorTemplate.VORDIPLOM_COLORS[0]);
-        intradayDataSet.setCircleColor(ColorTemplate.VORDIPLOM_COLORS[0]);
+        intradayDataSet.setColor(ContextCompat.getColor(getContext(),R.color.colorBlueDailyLine));
+        intradayDataSet.setCircleColor(ContextCompat.getColor(getContext(),R.color.colorBlueDailyLine));
         intradayDataSet.setDrawValues(false);
+        //Add gradient to chart
+        Drawable lineChartFill = ContextCompat.getDrawable(getContext(), R.drawable.blue_fade);
+        intradayDataSet.setFillDrawable(lineChartFill);
+        intradayDataSet.setDrawFilled(true);
 
         //Add open price line
         Typeface tf = Typeface.createFromAsset(getContext().getAssets(), "OpenSans-Regular.ttf");
@@ -736,6 +739,7 @@ public class StockDetailFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        //Remove stock if it isn't tracked
         Cursor cursor = getContext().getContentResolver().query(StockContentProvider.CONTENT_URI, null, StockDBHelper.COLUMN_STOCK_SYMBOL +
                 " = ?", new String[]{stockData.getSymbol().toUpperCase()}, null);
         int counter = cursor.getCount();
@@ -760,6 +764,7 @@ public class StockDetailFragment extends Fragment {
             PortfolioStock trackedStock = new PortfolioStock(stockData.getSymbol().toUpperCase(), stockData.getDayClose(), stockData.getDayOpen());
             mTrackedListener.onStockTracked(trackedStock);
             Log.i(StockDetailFragment.class.getName(), "Added to tracked stocks: " + stockData.getSymbol().toUpperCase());
+            Toast.makeText(getContext(), "Tracked.", Toast.LENGTH_SHORT).show();
             v.setVisibility(View.GONE);
         }
     };

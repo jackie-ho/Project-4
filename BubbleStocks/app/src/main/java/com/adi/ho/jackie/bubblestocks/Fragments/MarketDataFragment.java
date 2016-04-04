@@ -4,11 +4,13 @@ import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -85,8 +87,8 @@ public class MarketDataFragment extends Fragment {
             }
         }
         //Register content observer to observe price changes every minute
-        mObserver = new StockContentObserver(new Handler());
-        getContext().getContentResolver().registerContentObserver(StockContentProvider.CONTENT_URI,true,mObserver);
+       // mObserver = new StockContentObserver(new Handler());
+//        getContext().getContentResolver().registerContentObserver(StockContentProvider.CONTENT_URI,true,mObserver);
         return view;
     }
 
@@ -129,8 +131,14 @@ public class MarketDataFragment extends Fragment {
         LineDataSet d1 = new LineDataSet(e1, "");
         d1.setLineWidth(2.5f);
         //    d1.setCircleRadius(4.5f);
-        d1.setHighLightColor(Color.rgb(244, 117, 117));
+        d1.setHighLightColor(Color.rgb(65, 65, 65));
         d1.setDrawValues(false);
+        d1.setDrawFilled(true);
+        d1.setCircleColor(Color.rgb(154, 154, 154));
+        d1.setColor(Color.rgb(154, 154, 154));
+        Drawable gradient = ContextCompat.getDrawable(getContext(), R.drawable.gray_fade);
+        d1.setFillDrawable(gradient);
+        d1.setDrawFilled(true);
 
         ArrayList<ILineDataSet> sets = new ArrayList<ILineDataSet>();
         sets.add(d1);
@@ -196,34 +204,30 @@ public class MarketDataFragment extends Fragment {
         return null;
     }
 
-    private ArrayList<Float> readCsvFromIntradayMarket(){
-        return null;
-    }
 
     //Observes for price changes during trading session
-    public class StockContentObserver extends ContentObserver {
-
-        public StockContentObserver(Handler handler) {
-            super(handler);
-        }
-
-        @Override
-        public void onChange(boolean selfChange, Uri uri) {
-            //do stuff on UI thread
-            Log.d("MARKET DATA", "CHANGE OBSERVED AT URI: " + uri);
-            Cursor cursor = getContext().getContentResolver().query(StockContentProvider.CONTENT_URI, null, null, null, null);
-            cursor.moveToFirst();
-            while (!cursor.isAfterLast()) {
-                String price = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_PRICE));
-                Log.i("CONTENTOBSERVER", "New Price is: "+price);
-                cursor.moveToNext();
-            } cursor.close();
-        }
-    }
+//    public class StockContentObserver extends ContentObserver {
+//
+//        public StockContentObserver(Handler handler) {
+//            super(handler);
+//        }
+//
+//        @Override
+//        public void onChange(boolean selfChange, Uri uri) {
+//            //do stuff on UI thread
+//            Log.d("MARKET DATA", "CHANGE OBSERVED AT URI: " + uri);
+//            Cursor cursor = getContext().getContentResolver().query(StockContentProvider.CONTENT_URI, null, null, null, null);
+//            cursor.moveToFirst();
+//            while (!cursor.isAfterLast()) {
+//                String price = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_PRICE));
+//                Log.i("CONTENTOBSERVER", "New Price is: "+price);
+//                cursor.moveToNext();
+//            } cursor.close();
+//        }
+//    }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        getContext().getContentResolver().unregisterContentObserver(mObserver);
     }
 }
