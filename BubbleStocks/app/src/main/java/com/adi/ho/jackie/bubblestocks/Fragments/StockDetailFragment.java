@@ -1,5 +1,6 @@
 package com.adi.ho.jackie.bubblestocks.Fragments;
 
+import android.app.Activity;
 import android.content.ContentValues;
 import android.database.ContentObserver;
 import android.database.Cursor;
@@ -16,20 +17,18 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.ActionProvider;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.adi.ho.jackie.bubblestocks.Database.StockContentProvider;
-import com.adi.ho.jackie.bubblestocks.Database.StockDBHelper;
+import com.adi.ho.jackie.bubblestocks.database.StockContentProvider;
+import com.adi.ho.jackie.bubblestocks.database.StockDBHelper;
 import com.adi.ho.jackie.bubblestocks.HttpConnections.CompanySpecificNewsRequest;
 import com.adi.ho.jackie.bubblestocks.MainActivity;
 import com.adi.ho.jackie.bubblestocks.R;
@@ -39,6 +38,7 @@ import com.adi.ho.jackie.bubblestocks.RecyclerviewItems.VerticalSpaceItemDecorat
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.DBStock;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.HistoricalStockQuoteWrapper;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.IntradayStockData;
+import com.adi.ho.jackie.bubblestocks.StockPortfolio.PortfolioStock;
 import com.adi.ho.jackie.bubblestocks.companyspecificrssfeed.CompanyResult;
 import com.adi.ho.jackie.bubblestocks.customviews.CandleCustomMarkerView;
 import com.github.mikephil.charting.charts.CandleStickChart;
@@ -58,7 +58,6 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.highlight.Highlight;
-import com.github.mikephil.charting.interfaces.datasets.ICandleDataSet;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.ColorTemplate;
@@ -69,8 +68,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
@@ -81,8 +78,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TimeZone;
-
-import yahoofinance.Stock;
 
 /**
  * Created by JHADI on 3/23/16.
@@ -128,7 +123,21 @@ public class StockDetailFragment extends Fragment {
     private RecyclerView mRecycler;
     private NewsRecyclerAdapter mAdapter;
     private List<com.adi.ho.jackie.bubblestocks.companyspecificrssfeed.Item> mArticleTitleList;
+    public OnTrackedListener mTrackedListener;
 
+    public static interface OnTrackedListener {
+        public void onStockTracked(PortfolioStock newTrackedStock);
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            mTrackedListener = (OnTrackedListener)activity;
+        } catch (ClassCastException e){
+            throw new ClassCastException(activity.toString()+" needs to implement OnTrackedListener");
+        }
+    }
 
     @Nullable
     @Override
@@ -267,6 +276,7 @@ public class StockDetailFragment extends Fragment {
             mAdapter = new NewsRecyclerAdapter(mArticleTitleList, getContext());
             mRecycler.addItemDecoration(new VerticalSpaceItemDecoration(40));
             mRecycler.addItemDecoration(new DividerItemDecoration(getContext()));
+            mRecycler.setNestedScrollingEnabled(false);
             mRecycler.setAdapter(mAdapter);
         }
     }
@@ -706,6 +716,8 @@ public class StockDetailFragment extends Fragment {
             portfolioStock.put(StockDBHelper.COLUMN_STOCK_TRACKED, 1);
             getContext().getContentResolver().update(uri, portfolioStock,
                     StockDBHelper.COLUMN_ID + " = ? ", new String[]{String.valueOf(stockId)});
+            PortfolioStock trackedStock = new PortfolioStock(stockData.getSymbol().toUpperCase(), stockData.getDayClose(), stockData.getDayOpen());
+            mTrackedListener.onStockTracked(trackedStock);
             Log.i(StockDetailFragment.class.getName(), "Added to tracked stocks: " + stockData.getSymbol().toUpperCase());
             v.setVisibility(View.GONE);
         }

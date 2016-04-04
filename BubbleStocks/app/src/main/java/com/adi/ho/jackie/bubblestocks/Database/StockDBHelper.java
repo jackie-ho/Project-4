@@ -1,10 +1,9 @@
-package com.adi.ho.jackie.bubblestocks.Database;
+package com.adi.ho.jackie.bubblestocks.database;
 
 /**
  * Created by JHADI on 3/22/16.
  */
 
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -12,8 +11,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.util.Log;
-
-import java.util.ArrayList;
 
 public class StockDBHelper extends SQLiteOpenHelper {
 

@@ -3,22 +3,16 @@ package com.adi.ho.jackie.bubblestocks;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.animation.Animator;
-import android.animation.AnimatorInflater;
-import android.animation.AnimatorSet;
-import android.animation.ObjectAnimator;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Handler;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
@@ -33,16 +27,13 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
-import android.view.animation.Animation;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import com.adi.ho.jackie.bubblestocks.Database.StockContentProvider;
-import com.adi.ho.jackie.bubblestocks.Database.StockDBHelper;
+import com.adi.ho.jackie.bubblestocks.database.StockContentProvider;
+import com.adi.ho.jackie.bubblestocks.database.StockDBHelper;
 import com.adi.ho.jackie.bubblestocks.Fragments.MarketDataFragment;
 import com.adi.ho.jackie.bubblestocks.Fragments.PortfolioFragment;
 import com.adi.ho.jackie.bubblestocks.Fragments.StockDetailFragment;
@@ -55,14 +46,11 @@ import com.adi.ho.jackie.bubblestocks.HttpConnections.NyseHttpRequest;
 import com.adi.ho.jackie.bubblestocks.HttpConnections.SpyHttpRequests;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.DBStock;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.HistoricalStockQuoteWrapper;
-import com.adi.ho.jackie.bubblestocks.StockPortfolio.MarketData;
+import com.adi.ho.jackie.bubblestocks.StockPortfolio.PortfolioStock;
 import com.adi.ho.jackie.bubblestocks.customviews.BubbleImageView;
-import com.adi.ho.jackie.bubblestocks.oauth.TradeKingClient;
 import com.github.mikephil.charting.animation.Easing;
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.data.Entry;
-import com.github.mikephil.charting.data.LineData;
-import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.formatter.PercentFormatter;
@@ -72,7 +60,6 @@ import com.github.mikephil.charting.utils.ColorTemplate;
 import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
 import java.io.IOException;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -82,15 +69,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
 import yahoofinance.histquotes.HistoricalQuote;
 import yahoofinance.histquotes.Interval;
 
-public class MainActivity extends AppCompatActivity implements StockFragment.SelectStock, OnChartValueSelectedListener {
+public class MainActivity extends AppCompatActivity implements StockFragment.SelectStock, OnChartValueSelectedListener, StockDetailFragment.OnTrackedListener {
 
     public static final String stockTwitsAuthenticate = "";
     public static final String AUTHORITY = "com.adi.ho.jackie.bubblestocks.Database.StockContentProvider";
@@ -112,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     private List<Integer> bubbleDrawableList;
     private RelativeLayout mParentLayout;
     private ArrayList<Integer> colors;
+    private PortfolioFragment portfolioFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -485,6 +471,9 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         s.setSpan(new ForegroundColorSpan(ColorTemplate.getHoloBlue()), s.length() - 6, s.length(), 0);
         return s;
     }
+
+
+    //====================================Nav Wheel==========================================================
     FragmentManager fragmentManager = getSupportFragmentManager();
     @Override
     public void onValueSelected(Entry e, int dataSetIndex, Highlight h) {
@@ -492,9 +481,9 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
             case 0:
                 //Toast.makeText(MainActivity.this, "Portfolio", Toast.LENGTH_SHORT).show();
                 //mMainNavigationTool.animateXY(3400, 3400, Easing.EasingOption.EaseOutCirc, Easing.EasingOption.EaseOutCirc);
-                PortfolioFragment portfolioFragment = new PortfolioFragment();
+                portfolioFragment = new PortfolioFragment();
                 FragmentTransaction portfolioTransaction = fragmentManager.beginTransaction();
-                portfolioTransaction.replace(R.id.stock_fragmentcontainer, portfolioFragment).addToBackStack(null).commit();
+                portfolioTransaction.replace(R.id.stock_fragmentcontainer, portfolioFragment).addToBackStack("PORTFOLIO").commit();
                 break;
             case 1:
                 Toast.makeText(MainActivity.this, "News", Toast.LENGTH_SHORT).show();
@@ -611,18 +600,21 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         mParentLayout.addView(image);
         float scaley = (float) (Math.random() * 400 + 1600) * 1f;
         float scalex = (float) (Math.random() * 700 + 60);
-        AnimatorSet aniSet = new AnimatorSet();
-        ObjectAnimator bubbleFloat = ObjectAnimator.ofFloat(image, "y", scaley);
-        ObjectAnimator bubbleXAnimate = ObjectAnimator.ofFloat(image, "x", scalex);
-        ObjectAnimator bubbleFadeIn = ObjectAnimator.ofFloat(image, "alpha", 0f, 1f);
-        aniSet.setInterpolator(new AccelerateDecelerateInterpolator());
-        aniSet.setDuration(duration);
-        aniSet.playTogether(bubbleFloat,bubbleXAnimate,bubbleFadeIn);
+//        AnimatorSet aniSet = new AnimatorSet();
+//        ObjectAnimator bubbleFloat = ObjectAnimator.ofFloat(image, "y", scaley);
+//        ObjectAnimator bubbleXAnimate = ObjectAnimator.ofFloat(image, "x", scalex);
+//        ObjectAnimator bubbleFadeIn = ObjectAnimator.ofFloat(image, "alpha", 0f, 1f);
+//        aniSet.setInterpolator(new AccelerateDecelerateInterpolator());
+//        aniSet.setDuration(duration);
+//        aniSet.playTogether(bubbleFloat, bubbleXAnimate, bubbleFadeIn);
 //        aniSet.play(bubbleFloat).with(bubbleXAnimate);
         image.setOnClickListener(bubblePopListener);
-
-        //Animation listener, pop bubble when it's done
-        aniSet.addListener(new Animator.AnimatorListener() {
+        image.animate().setInterpolator(new AccelerateDecelerateInterpolator())
+                .alpha(1)
+                .setDuration(duration)
+                .x(scalex)
+                .y(scaley)
+        .setListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animation) {
 
@@ -635,7 +627,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
 
             @Override
             public void onAnimationCancel(Animator animation) {
-                image.setVisibility(View.GONE);
+
             }
 
             @Override
@@ -643,8 +635,13 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
 
             }
         });
-        aniSet.start();
+
+        //Animation listener, pop bubble when it's done
+
+      //  aniSet.start();
     }
+
+
 
     View.OnClickListener bubblePopListener = new View.OnClickListener() {
         @Override
@@ -659,7 +656,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     //Animation bubble
     private void animateBubbling(){
         Handler animationHandler = new Handler();
-        for (int i = 0; i < 60; i++) {
+        for (int i = 0; i < 30; i++) {
             Runnable animationRunnable = new Runnable() {
                 @Override
                 public void run() {
@@ -668,6 +665,16 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
             };
             animationHandler.post(animationRunnable);
          //   setupBubbleAnimation();
+        }
+    }
+
+    @Override
+    public void onStockTracked(PortfolioStock trackedStock) {
+        //portfolioFragment = (PortfolioFragment)
+        //fragmentManager.findFragmentByTag("PORTFOLIO");
+
+        if (portfolioFragment != null){
+            portfolioFragment.addBubbleToPortfolio(trackedStock);
         }
     }
 }

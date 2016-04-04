@@ -1,9 +1,10 @@
-package com.adi.ho.jackie.bubblestocks.Activities;
+package com.adi.ho.jackie.bubblestocks.activities;
 
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.view.View;
 import android.webkit.WebView;
 import android.widget.ProgressBar;
 
@@ -12,7 +13,6 @@ import com.adi.ho.jackie.bubblestocks.R;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import java.io.IOException;
 
@@ -41,6 +41,12 @@ public class ArticleActivity extends AppCompatActivity {
 
     private class ConnectToWebAsyncTask extends AsyncTask<String,Void,Void>{
         @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mProgressBar.setVisibility(View.VISIBLE);
+        }
+
+        @Override
         protected Void doInBackground(String... params) {
             try {
                 //Scrape webpage for body
@@ -54,6 +60,7 @@ public class ArticleActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
+            mProgressBar.setVisibility(View.GONE);
             final Element ele = mWebPage.body(); //mWebpage.body.select("p").text()
             final String body = "<style>img{display: inline; height: auto; max-width: 100%;}</style>"+ele.select("p").html();
             mWebView.post(new Runnable() {

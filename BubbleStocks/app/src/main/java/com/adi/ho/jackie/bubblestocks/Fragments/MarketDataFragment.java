@@ -15,21 +15,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
 
-import com.adi.ho.jackie.bubblestocks.Database.StockContentProvider;
-import com.adi.ho.jackie.bubblestocks.Database.StockDBHelper;
+import com.adi.ho.jackie.bubblestocks.database.StockContentProvider;
+import com.adi.ho.jackie.bubblestocks.database.StockDBHelper;
 import com.adi.ho.jackie.bubblestocks.R;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.MarketData;
 import com.adi.ho.jackie.bubblestocks.listitems.ChartItem;
 import com.adi.ho.jackie.bubblestocks.listitems.LineChartItem;
 import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
-import com.github.mikephil.charting.utils.ColorTemplate;
 import com.github.mikephil.charting.utils.Utils;
 
 import org.json.JSONArray;
@@ -37,7 +34,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
 

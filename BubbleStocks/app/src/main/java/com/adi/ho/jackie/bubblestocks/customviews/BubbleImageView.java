@@ -30,6 +30,7 @@ public class BubbleImageView extends ImageView{
         setLayoutParams(params);
         setMaxHeight(100);
         setMaxWidth(100);
+        setAlpha(0f);
 
         setPadding(0, 0,0,0);
 //        if (xPadding % 2 == 0) {

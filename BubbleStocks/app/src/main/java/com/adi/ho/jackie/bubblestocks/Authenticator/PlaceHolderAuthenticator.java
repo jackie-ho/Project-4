@@ -1,4 +1,4 @@
-package com.adi.ho.jackie.bubblestocks.Authenticator;
+package com.adi.ho.jackie.bubblestocks.authenticator;
 
 import android.accounts.AbstractAccountAuthenticator;
 import android.accounts.Account;

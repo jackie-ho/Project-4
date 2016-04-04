@@ -12,31 +12,19 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.RemoteException;
-import android.util.Log;
 
-import com.adi.ho.jackie.bubblestocks.Database.StockContentProvider;
-import com.adi.ho.jackie.bubblestocks.Database.StockDBHelper;
+import com.adi.ho.jackie.bubblestocks.database.StockContentProvider;
+import com.adi.ho.jackie.bubblestocks.database.StockDBHelper;
 import com.adi.ho.jackie.bubblestocks.HttpConnections.MarkitHttpSyncRequest;
 import com.adi.ho.jackie.bubblestocks.HttpConnections.NasdaqIntradayHttpRequest;
-import com.adi.ho.jackie.bubblestocks.HttpConnections.SpyHttpRequests;
 import com.adi.ho.jackie.bubblestocks.StockPortfolio.DBStock;
-import com.google.gson.Gson;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import yahoofinance.Stock;
 import yahoofinance.YahooFinance;

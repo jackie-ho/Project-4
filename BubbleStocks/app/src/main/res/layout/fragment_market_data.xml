@@ -1,19 +1,16 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<com.nirhart.parallaxscroll.views.ParallaxScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context="com.adi.ho.jackie.bubblestocks.Fragments.MarketDataFragment">
+    app:circular_parallax="true"
+    app:parallax_factor="1.9"
+    android:background="#ffffff">
 
-    <!-- TODO: Update blank fragment layout -->
-    <!--put this in a listview?-->
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#ffffff">
     <ListView
         android:id="@+id/marketListView"
+        android:layout_marginTop="50dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent"></ListView>
-    </RelativeLayout>
-</LinearLayout>
+</com.nirhart.parallaxscroll.views.ParallaxScrollView>
+
+

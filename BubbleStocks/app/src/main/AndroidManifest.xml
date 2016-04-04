@@ -22,7 +22,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".Authenticator.AuthenticatorService">
+        <service android:name=".authenticator.AuthenticatorService">
             <intent-filter>
                 <action android:name="android.accounts.AccountAuthenticator" />
             </intent-filter>
@@ -42,13 +42,13 @@
         </service>
 
         <provider
-            android:name=".Database.StockContentProvider"
-            android:authorities="com.adi.ho.jackie.bubblestocks.Database.StockContentProvider"
+            android:name=".database.StockContentProvider"
+            android:authorities="com.adi.ho.jackie.bubblestocks.database.StockContentProvider"
             android:exported="false"
             android:label="my provider"
             android:syncable="true" />
 
-        <activity android:name=".Activities.ArticleActivity"></activity>
+        <activity android:name=".activities.ArticleActivity"></activity>
     </application>
 
 </manifest>

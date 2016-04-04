@@ -1,4 +1,4 @@
-package com.adi.ho.jackie.bubblestocks.Database;
+package com.adi.ho.jackie.bubblestocks.database;
 
 /**
  * Created by JHADI on 3/22/16.
@@ -7,7 +7,6 @@ import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.util.Log;

@@ -148,7 +148,7 @@ public class PortfolioBubble extends LinearLayout implements  View.OnTouchListen
             mPrice.setText(price + "\n -");
         } else {
             drawable.setStroke(2, Color.RED);
-            mPrice.setText(price + "\n-" + change);
+            mPrice.setText(price + "\n -" + change);
         }
     }
 
@@ -189,6 +189,8 @@ public class PortfolioBubble extends LinearLayout implements  View.OnTouchListen
     float dX, dY;
     long startClickTime;
     private static final int MAX_CLICK_DURATION = 200;
+
+    //Motion events, touch listener
     @Override
     public boolean onTouch(View v, MotionEvent event) {
          switch (event.getAction()) {
@@ -207,22 +209,12 @@ public class PortfolioBubble extends LinearLayout implements  View.OnTouchListen
                 } break;
 
             case MotionEvent.ACTION_MOVE:
-                if (Math.abs(dX) >= width-25 || Math.abs(dX) <= 25) {
-                    v.animate()
-                            .y(event.getRawY() + dY)
-                            .setDuration(0).start();
-                } else if (Math.abs(dY) >= height-25 || Math.abs(dY) <= 25){
-                    v.animate()
-                            .x(event.getRawX() + dX)
-                            .setDuration(0).start();
-                } else {
 
                     v.animate()
                             .x(event.getRawX() + dX)
                             .y(event.getRawY() + dY)
                             .setDuration(0)
                             .start();
-                }
                 break;
 
             default:
