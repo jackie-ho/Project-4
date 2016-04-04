@@ -1,4 +1,4 @@
-package com.adi.ho.jackie.bubblestocks;
+package com.adi.ho.jackie.bubblestocks.activities;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -32,21 +32,22 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.adi.ho.jackie.bubblestocks.R;
 import com.adi.ho.jackie.bubblestocks.database.StockContentProvider;
 import com.adi.ho.jackie.bubblestocks.database.StockDBHelper;
-import com.adi.ho.jackie.bubblestocks.Fragments.MarketDataFragment;
-import com.adi.ho.jackie.bubblestocks.Fragments.PortfolioFragment;
-import com.adi.ho.jackie.bubblestocks.Fragments.StockDetailFragment;
-import com.adi.ho.jackie.bubblestocks.Fragments.StockFragment;
-import com.adi.ho.jackie.bubblestocks.Fragments.TopNewsFragment;
-import com.adi.ho.jackie.bubblestocks.HttpConnections.DowHttpRequests;
-import com.adi.ho.jackie.bubblestocks.HttpConnections.IntradayMarketDataRequest;
-import com.adi.ho.jackie.bubblestocks.HttpConnections.NasdaqHttpRequest;
-import com.adi.ho.jackie.bubblestocks.HttpConnections.NyseHttpRequest;
-import com.adi.ho.jackie.bubblestocks.HttpConnections.SpyHttpRequests;
-import com.adi.ho.jackie.bubblestocks.StockPortfolio.DBStock;
-import com.adi.ho.jackie.bubblestocks.StockPortfolio.HistoricalStockQuoteWrapper;
-import com.adi.ho.jackie.bubblestocks.StockPortfolio.PortfolioStock;
+import com.adi.ho.jackie.bubblestocks.fragments.MarketDataFragment;
+import com.adi.ho.jackie.bubblestocks.fragments.PortfolioFragment;
+import com.adi.ho.jackie.bubblestocks.fragments.StockDetailFragment;
+import com.adi.ho.jackie.bubblestocks.fragments.StockFragment;
+import com.adi.ho.jackie.bubblestocks.fragments.TopNewsFragment;
+import com.adi.ho.jackie.bubblestocks.httpconnections.DowHttpRequests;
+import com.adi.ho.jackie.bubblestocks.httpconnections.IntradayMarketDataRequest;
+import com.adi.ho.jackie.bubblestocks.httpconnections.NasdaqHttpRequest;
+import com.adi.ho.jackie.bubblestocks.httpconnections.NyseHttpRequest;
+import com.adi.ho.jackie.bubblestocks.httpconnections.SpyHttpRequests;
+import com.adi.ho.jackie.bubblestocks.stockportfolio.DBStock;
+import com.adi.ho.jackie.bubblestocks.stockportfolio.HistoricalStockQuoteWrapper;
+import com.adi.ho.jackie.bubblestocks.stockportfolio.PortfolioStock;
 import com.adi.ho.jackie.bubblestocks.customviews.BubbleImageView;
 import com.github.mikephil.charting.animation.Easing;
 import com.github.mikephil.charting.charts.PieChart;
@@ -68,6 +69,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 import java.util.TimeZone;
 
 import yahoofinance.Stock;
@@ -77,14 +79,14 @@ import yahoofinance.histquotes.Interval;
 
 public class MainActivity extends AppCompatActivity implements StockFragment.SelectStock, OnChartValueSelectedListener, StockDetailFragment.OnTrackedListener {
 
-    public static final String stockTwitsAuthenticate = "";
-    public static final String AUTHORITY = "com.adi.ho.jackie.bubblestocks.Database.StockContentProvider";
+    public static final String AUTHORITY = "com.adi.ho.jackie.bubblestocks.database.StockContentProvider";
     // Account type
     public static final String ACCOUNT_TYPE = "example.com";
     // Account
     public static final String ACCOUNT = "default_account";
     private MaterialSearchView mMaterialSearchView;
     private static final String INITIAL_START = "Initialized";
+    private static final String SYNC_STARTED = "SYNC_START";
 
     Account mAccount;
     ContentResolver mResolver;
@@ -98,6 +100,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     private RelativeLayout mParentLayout;
     private ArrayList<Integer> colors;
     private PortfolioFragment portfolioFragment;
+    private boolean syncActivated;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -191,6 +194,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     private void autoSyncStocks() {
         SharedPreferences settings = getPreferences(Context.MODE_PRIVATE);
         initialSync = settings.getBoolean(INITIAL_START, true);
+        syncActivated = settings.getBoolean(SYNC_STARTED, false);
 
         Calendar currentTime = Calendar.getInstance();
         currentTime.setTimeZone(TimeZone.getTimeZone("America/New_York"));
@@ -203,6 +207,9 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
             ContentResolver.setIsSyncable(mAccount, AUTHORITY, 0);
             ContentResolver.cancelSync(null, null);
             Log.d("SYNCADAPTER", "Sync canceled");
+            SharedPreferences.Editor editor = settings.edit();
+            editor.putBoolean(SYNC_STARTED, false);
+            editor.commit();
 
         } else try {
             //Check for times between 9 am - 4 pm
@@ -216,6 +223,15 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
                     //Start sync service once
                     SharedPreferences.Editor editor = settings.edit();
                     editor.putBoolean(INITIAL_START, false);
+                    editor.putBoolean(SYNC_STARTED, true);
+                    editor.commit();
+                } else if (!syncActivated){
+                    ContentResolver.setIsSyncable(mAccount, AUTHORITY, 1);
+                    ContentResolver.setSyncAutomatically(mAccount, AUTHORITY, true);
+                    long seconds = 60;
+                    ContentResolver.addPeriodicSync(mAccount, AUTHORITY, Bundle.EMPTY, seconds);
+                    SharedPreferences.Editor editor = settings.edit();
+                    editor.putBoolean(SYNC_STARTED, true);
                     editor.commit();
                 }
 
@@ -223,6 +239,9 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
                 ContentResolver.setIsSyncable(mAccount, AUTHORITY, 0);
                 ContentResolver.cancelSync(null, null);
                 Log.d("SYNCADAPTER", "Sync canceled");
+                SharedPreferences.Editor editor = settings.edit();
+                editor.putBoolean(SYNC_STARTED, false);
+                editor.commit();
             }
         } catch (ParseException e) {
             e.printStackTrace();
@@ -361,7 +380,6 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     @Override
     protected void onResume() {
         super.onResume();
-        setTitle("Home");
         animateBubbling();
 
     }
@@ -445,6 +463,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
 
         colors.add(ColorTemplate.getHoloBlue());
 
+
         dataSet.setColors(colors);
 
         PieData data = new PieData(xVals, dataSet);
@@ -486,7 +505,6 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
                 portfolioTransaction.replace(R.id.stock_fragmentcontainer, portfolioFragment).addToBackStack("PORTFOLIO").commit();
                 break;
             case 1:
-                Toast.makeText(MainActivity.this, "News", Toast.LENGTH_SHORT).show();
                 mMainNavigationTool.animateXY(3400, 3400, Easing.EasingOption.EaseOutCubic, Easing.EasingOption.EaseOutCubic);
                 TopNewsFragment topNewsFragment = new TopNewsFragment();
 
@@ -591,15 +609,16 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     private void setupBubbleAnimation(){
 
         int duration = (int) (Math.random() * 30000) + 13000;
-        int diameter = (int)(Math.random()*70)+30;
-        int randomColor = (int)(Math.random()*colors.size());
+        int diameter = (int)(Math.random()*70)+60;
+        Random randColor = new Random();
         final BubbleImageView image = new BubbleImageView(this);
 //        image.setImageDrawable(dynamicGenerateBubbleShape(diameter, colors.get(randomColor)));
-        image.setBackground(dynamicGenerateBubbleShape(diameter,colors.get(randomColor)));
+        image.setBackground(dynamicGenerateBubbleShape(diameter,colors.get(randColor.nextInt(colors.size()))));
         // Adds the view to the layout
         mParentLayout.addView(image);
-        float scaley = (float) (Math.random() * 400 + 1600) * 1f;
-        float scalex = (float) (Math.random() * 700 + 60);
+        //TODO: change to width and height of screen
+        float scaley = (float) (Math.random() * 1600 + 200) * 1f;
+        float scalex = (float) (Math.random() * 950 + 20);
 //        AnimatorSet aniSet = new AnimatorSet();
 //        ObjectAnimator bubbleFloat = ObjectAnimator.ofFloat(image, "y", scaley);
 //        ObjectAnimator bubbleXAnimate = ObjectAnimator.ofFloat(image, "x", scalex);
@@ -608,7 +627,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
 //        aniSet.setDuration(duration);
 //        aniSet.playTogether(bubbleFloat, bubbleXAnimate, bubbleFadeIn);
 //        aniSet.play(bubbleFloat).with(bubbleXAnimate);
-        image.setOnClickListener(bubblePopListener);
+        image.setOnClickListener(bubblePop);
         image.animate().setInterpolator(new AccelerateDecelerateInterpolator())
                 .alpha(1)
                 .setDuration(duration)
@@ -627,7 +646,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
 
             @Override
             public void onAnimationCancel(Animator animation) {
-
+                image.setVisibility(View.GONE);
             }
 
             @Override
@@ -636,22 +655,18 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
             }
         });
 
-        //Animation listener, pop bubble when it's done
 
-      //  aniSet.start();
     }
-
-
-
-    View.OnClickListener bubblePopListener = new View.OnClickListener() {
+    View.OnClickListener bubblePop = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             v.setVisibility(View.GONE);
-            if (v.getAnimation() != null) {
+            if (v.getAnimation() != null){
                 v.getAnimation().cancel();
             }
         }
     };
+
 
     //Animation bubble
     private void animateBubbling(){
@@ -673,6 +688,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         //portfolioFragment = (PortfolioFragment)
         //fragmentManager.findFragmentByTag("PORTFOLIO");
 
+        //Add bubble to portfolio if portfolio fragment is opened.
         if (portfolioFragment != null){
             portfolioFragment.addBubbleToPortfolio(trackedStock);
         }

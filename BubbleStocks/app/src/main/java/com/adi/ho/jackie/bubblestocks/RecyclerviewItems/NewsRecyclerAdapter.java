@@ -1,4 +1,4 @@
-package com.adi.ho.jackie.bubblestocks.RecyclerviewItems;
+package com.adi.ho.jackie.bubblestocks.recyclerviewitems;
 
 import android.content.Context;
 import android.content.Intent;

@@ -97,6 +97,12 @@ public class StockDBHelper extends SQLiteOpenHelper {
         return cursor;
     }
 
+    public Cursor queryStocks(String selections, String[] selectionArgs){
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.query(TABLE_STOCKS, ALL_COLUMNS, selections, selectionArgs, null, null, null);
+        return cursor;
+    }
+
     public void deleteStock(String selection, String[] selectionArgs){
         SQLiteDatabase db = getWritableDatabase();
         db.delete(TABLE_STOCKS,selection,selectionArgs);

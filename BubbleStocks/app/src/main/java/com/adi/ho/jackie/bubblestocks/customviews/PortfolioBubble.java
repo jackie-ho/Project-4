@@ -1,19 +1,18 @@
 package com.adi.ho.jackie.bubblestocks.customviews;
 
 import android.content.Context;
+import android.content.res.Resources;
+import android.database.Cursor;
 import android.graphics.Color;
-import android.graphics.Point;
 import android.graphics.drawable.GradientDrawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.GravityCompat;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Display;
-import android.view.Gravity;
-import android.view.LayoutInflater;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,20 +20,22 @@ import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.adi.ho.jackie.bubblestocks.Fragments.StockDetailFragment;
-import com.adi.ho.jackie.bubblestocks.HttpConnections.IntradayMarketDataRequest;
-import com.adi.ho.jackie.bubblestocks.MainActivity;
+import com.adi.ho.jackie.bubblestocks.database.StockContentProvider;
+import com.adi.ho.jackie.bubblestocks.database.StockDBHelper;
+import com.adi.ho.jackie.bubblestocks.fragments.StockDetailFragment;
+import com.adi.ho.jackie.bubblestocks.httpconnections.IntradayMarketDataRequest;
+import com.adi.ho.jackie.bubblestocks.activities.MainActivity;
 import com.adi.ho.jackie.bubblestocks.R;
-import com.adi.ho.jackie.bubblestocks.StockPortfolio.DBStock;
-import com.adi.ho.jackie.bubblestocks.StockPortfolio.HistoricalStockQuoteWrapper;
-import com.adi.ho.jackie.bubblestocks.StockPortfolio.Portfolio;
+import com.adi.ho.jackie.bubblestocks.stockportfolio.DBStock;
+import com.adi.ho.jackie.bubblestocks.stockportfolio.HistoricalStockQuoteWrapper;
+import com.github.mikephil.charting.utils.ColorTemplate;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Random;
 
 import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
@@ -52,7 +53,7 @@ public class PortfolioBubble extends LinearLayout implements  View.OnTouchListen
     private int height;
     private int width;
     private FragmentManager fragmentManager;
-
+    private ArrayList<Integer> colors;
 
     //Compound view bubble
     Context context;
@@ -102,12 +103,13 @@ public class PortfolioBubble extends LinearLayout implements  View.OnTouchListen
 
         mSymbol = (TextView) this.findViewById(R.id.stock_symboltext);
         mPrice = (TextView) this.findViewById(R.id.stock_percentagechange);
-
+        addColorsToArray();
         //Strings get set before it finishes inflating
         mSymbol.setText("hihi");
         mPrice.setText("baby");
         mSymbol.setTextSize(15f);
-        setBackgroundResource(R.drawable.bubble1);
+        Random randColor = new Random();
+        setBackground(dynamicGenerateBubbleShape(colors.get(randColor.nextInt(colors.size()))));
 
         setOrientation(LinearLayout.VERTICAL);
         setAlpha(0.8f);
@@ -239,4 +241,74 @@ public class PortfolioBubble extends LinearLayout implements  View.OnTouchListen
             }
         }
     };
+    private GradientDrawable dynamicGenerateBubbleShape( int color) {
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setColor(color);
+        drawable.setShape(GradientDrawable.OVAL);
+        drawable.setGradientRadius(150f);
+        drawable.setGradientType(GradientDrawable.RADIAL_GRADIENT);
+        drawable.setDither(true);
+        drawable.setStroke((int) 2, Color.parseColor("#EEEEEE"));
+        Resources r = getResources();
+        float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 80, r.getDisplayMetrics());
+        drawable.setSize((int)px, (int)px);
+
+        drawable.setAlpha(200);
+        return drawable;
+    }
+
+    private void addColorsToArray(){
+        colors = new ArrayList<Integer>();
+
+        for (int c : ColorTemplate.VORDIPLOM_COLORS)
+            colors.add(c);
+
+        for (int c : ColorTemplate.JOYFUL_COLORS)
+            colors.add(c);
+
+        for (int c : ColorTemplate.COLORFUL_COLORS)
+            colors.add(c);
+
+        for (int c : ColorTemplate.LIBERTY_COLORS)
+            colors.add(c);
+
+        for (int c : ColorTemplate.PASTEL_COLORS)
+            colors.add(c);
+    }
+
+    public void updatePrice(){
+        new UpdatePriceAsyncTask().execute(symbol);
+
+    }
+
+    private class UpdatePriceAsyncTask extends AsyncTask<String, Void, String[]>{
+
+        @Override
+        protected String[] doInBackground(String... params) {
+
+            String[] columns = new String[]{StockDBHelper.COLUMN_STOCK_SYMBOL, StockDBHelper.COLUMN_STOCK_PRICE};
+            String[] updatedPrice = new String[2];
+            String stockSymbol = params[0];
+
+
+            Cursor cursor = context.getContentResolver().query(StockContentProvider.CONTENT_URI,columns ,
+                    null, null, null, null);
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()){
+                if (cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_SYMBOL)).equalsIgnoreCase(stockSymbol)){
+                    updatedPrice[0] = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_PRICE));
+                    updatedPrice[1] = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_OPENPRICE));
+                    break;
+                }
+                cursor.moveToNext();
+            }
+
+            return updatedPrice;
+        }
+
+        @Override
+        protected void onPostExecute(String[] s) {
+            setmPrice(s[0], s[1]);
+        }
+    }
 }

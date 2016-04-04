@@ -3,10 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.adi.ho.jackie.bubblestocks.MainActivity"
+    tools:context=".activities.MainActivity"
     android:id="@+id/main_activity_rel_layout"
     android:animationCache="true"
-    android:drawingCacheQuality="low">
+    android:drawingCacheQuality="low"
+    android:background="#ffe59c">
 <FrameLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"

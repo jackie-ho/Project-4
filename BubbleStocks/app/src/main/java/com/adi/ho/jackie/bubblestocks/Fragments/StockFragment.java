@@ -1,11 +1,9 @@
-package com.adi.ho.jackie.bubblestocks.Fragments;
+package com.adi.ho.jackie.bubblestocks.fragments;
 
 import android.app.Activity;
-import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -19,19 +17,12 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.adi.ho.jackie.bubblestocks.R;
-import com.adi.ho.jackie.bubblestocks.RecyclerviewItems.StockRecyclerAdapter;
-import com.adi.ho.jackie.bubblestocks.StockPortfolio.DBStock;
-import com.github.mikephil.charting.charts.CandleStickChart;
-import com.github.mikephil.charting.data.CandleDataSet;
-import com.github.mikephil.charting.data.CandleEntry;
-import com.github.mikephil.charting.interfaces.dataprovider.CandleDataProvider;
+import com.adi.ho.jackie.bubblestocks.recyclerviewitems.StockRecyclerAdapter;
+import com.adi.ho.jackie.bubblestocks.stockportfolio.DBStock;
 import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.LinkedList;
 import java.util.List;
 
 import yahoofinance.Stock;

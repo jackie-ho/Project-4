@@ -1,13 +1,21 @@
-package com.adi.ho.jackie.bubblestocks.Fragments;
+package com.adi.ho.jackie.bubblestocks.fragments;
 
+import android.content.ContentResolver;
 import android.content.Context;
+import android.database.ContentObserver;
 import android.database.Cursor;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -15,12 +23,18 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.RelativeLayout;
 
+import com.adi.ho.jackie.bubblestocks.activities.MainActivity;
 import com.adi.ho.jackie.bubblestocks.database.StockContentProvider;
 import com.adi.ho.jackie.bubblestocks.database.StockDBHelper;
 import com.adi.ho.jackie.bubblestocks.R;
-import com.adi.ho.jackie.bubblestocks.StockPortfolio.Portfolio;
-import com.adi.ho.jackie.bubblestocks.StockPortfolio.PortfolioStock;
+import com.adi.ho.jackie.bubblestocks.stockportfolio.Portfolio;
+import com.adi.ho.jackie.bubblestocks.stockportfolio.PortfolioStock;
 import com.adi.ho.jackie.bubblestocks.customviews.PortfolioBubble;
+
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.util.ArrayList;
 
 
 public class PortfolioFragment extends Fragment {
@@ -30,6 +44,7 @@ public class PortfolioFragment extends Fragment {
     private Portfolio mPortfolio;
     private int width;
     private int height;
+    private ContentObserver mObserver;
 
 
     @Nullable
@@ -47,6 +62,8 @@ public class PortfolioFragment extends Fragment {
         });
         //Portfolio instance
         mPortfolio = Portfolio.getInstance();
+        mObserver = new StockContentObserver(new Handler());
+
 
         //Find out the tracked stocks
         if (mPortfolio.getPortfolioSize() == 0 ){
@@ -69,6 +86,13 @@ public class PortfolioFragment extends Fragment {
         width = displayMetrics.widthPixels;
         height = displayMetrics.heightPixels;
 
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        //TODO: manual update onresume
+        getContext().getContentResolver().registerContentObserver(StockContentProvider.CONTENT_URI, true, mObserver);
     }
 
     private class CreateTrackedStocksAsyncTask extends AsyncTask<Void,Void,Cursor>{
@@ -112,16 +136,47 @@ public class PortfolioFragment extends Fragment {
         bubble.setmPrice(trackedStock.getmPrice(), trackedStock.getmOpenPrice());
         // bubble.setOnTouchListener(dragBubbleListener);
         mFrameContainer.addView(bubble);
+        mPortfolio.addBubbleToList(bubble);
 
     }
 
     public void addBubbleToPortfolio(PortfolioStock newStock){
         mPortfolio.initialAddToPortfolio(newStock);
-        PortfolioBubble newBubble = new PortfolioBubble(getContext(), getActivity().getSupportFragmentManager());
-        newBubble.setmSymbol(newStock.getmSymbol());
-        newBubble.setmPrice(newStock.getmPrice(), newStock.getmOpenPrice());
-        mFrameContainer.addView(newBubble);
+        if (getContext() != null) {
+            PortfolioBubble newBubble = new PortfolioBubble(getContext(), getActivity().getSupportFragmentManager());
+            newBubble.setmSymbol(newStock.getmSymbol());
+            newBubble.setmPrice(newStock.getmPrice(), newStock.getmOpenPrice());
+            mFrameContainer.addView(newBubble);
+        }
 
     }
 
+
+
+    public class StockContentObserver extends ContentObserver {
+
+        public StockContentObserver(Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        public void onChange(boolean selfChange, Uri uri) {
+            //do stuff on UI thread
+
+            Log.d("MARKET DATA", "CHANGE OBSERVED AT URI: " + uri);
+            updateStocks();
+        }
+    }
+
+    private void updateStocks(){
+        for (PortfolioBubble portfolioBubble : mPortfolio.getMyStockBubblePortfolio()){
+            portfolioBubble.updatePrice();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        getContext().getContentResolver().unregisterContentObserver(mObserver);
+    }
 }

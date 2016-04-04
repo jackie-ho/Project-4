@@ -1,4 +1,4 @@
-package com.adi.ho.jackie.bubblestocks.Fragments;
+package com.adi.ho.jackie.bubblestocks.fragments;
 
 
 import android.os.AsyncTask;
@@ -10,18 +10,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.adi.ho.jackie.bubblestocks.HttpConnections.YahooTopStoriesRequest;
+import com.adi.ho.jackie.bubblestocks.httpconnections.YahooTopStoriesRequest;
 import com.adi.ho.jackie.bubblestocks.R;
-import com.adi.ho.jackie.bubblestocks.RecyclerviewItems.DividerItemDecoration;
-import com.adi.ho.jackie.bubblestocks.RecyclerviewItems.NewsRecyclerAdapter;
-import com.adi.ho.jackie.bubblestocks.RecyclerviewItems.VerticalSpaceItemDecoration;
-import com.adi.ho.jackie.bubblestocks.yahoorssfeed.Body;
-import com.adi.ho.jackie.bubblestocks.yahoorssfeed.Channel;
+import com.adi.ho.jackie.bubblestocks.recyclerviewitems.DividerItemDecoration;
+import com.adi.ho.jackie.bubblestocks.recyclerviewitems.NewsRecyclerAdapter;
+import com.adi.ho.jackie.bubblestocks.recyclerviewitems.VerticalSpaceItemDecoration;
 import com.adi.ho.jackie.bubblestocks.yahoorssfeed.InitialResult;
 import com.adi.ho.jackie.bubblestocks.yahoorssfeed.Item;
-import com.adi.ho.jackie.bubblestocks.yahoorssfeed.Query;
-import com.adi.ho.jackie.bubblestocks.yahoorssfeed.Results;
-import com.adi.ho.jackie.bubblestocks.yahoorssfeed.Rss;
 import com.google.gson.Gson;
 
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package com.adi.ho.jackie.bubblestocks.Fragments;
+package com.adi.ho.jackie.bubblestocks.fragments;
 
 import android.content.Context;
 import android.database.ContentObserver;
@@ -19,7 +19,7 @@ import android.widget.ListView;
 import com.adi.ho.jackie.bubblestocks.database.StockContentProvider;
 import com.adi.ho.jackie.bubblestocks.database.StockDBHelper;
 import com.adi.ho.jackie.bubblestocks.R;
-import com.adi.ho.jackie.bubblestocks.StockPortfolio.MarketData;
+import com.adi.ho.jackie.bubblestocks.stockportfolio.MarketData;
 import com.adi.ho.jackie.bubblestocks.listitems.ChartItem;
 import com.adi.ho.jackie.bubblestocks.listitems.LineChartItem;
 import com.github.mikephil.charting.charts.LineChart;

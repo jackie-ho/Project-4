@@ -14,7 +14,7 @@ import android.util.Log;
 
 
 public class StockContentProvider extends ContentProvider {
-    private static final String AUTHORITY = "com.adi.ho.jackie.bubblestocks.Database.StockContentProvider";
+    private static final String AUTHORITY = "com.adi.ho.jackie.bubblestocks.database.StockContentProvider";
     private static final String STOCK_PRICES_TABLE = StockDBHelper.TABLE_STOCKS;
     public static final Uri CONTENT_URI = Uri.parse("content://"
             + AUTHORITY + "/" + STOCK_PRICES_TABLE);
@@ -50,7 +50,12 @@ public class StockContentProvider extends ContentProvider {
                 break;
             case STOCK:
                 if (selection != null && selectionArgs != null && selectionArgs.length > 0){
-                    cursor = dbHelper.getTrackedStocks();
+                    if (selection.contains(StockDBHelper.COLUMN_STOCK_SYMBOL)){
+                        cursor = dbHelper.queryStocks(selection, selectionArgs);
+                        break;
+                    } else {
+                        cursor = dbHelper.getTrackedStocks();
+                    }
                     break;
                 } else {
                     cursor = dbHelper.getAllStocks();

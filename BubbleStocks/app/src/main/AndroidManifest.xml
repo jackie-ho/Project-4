@@ -14,7 +14,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity android:name=".activities.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -31,7 +31,7 @@
                 android:name="android.accounts.AccountAuthenticator"
                 android:resource="@xml/authenticator" />
         </service>
-        <service android:name=".SyncAdapter.MySyncService">
+        <service android:name=".syncadapter.MySyncService">
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
@@ -46,7 +46,7 @@
             android:authorities="com.adi.ho.jackie.bubblestocks.database.StockContentProvider"
             android:exported="false"
             android:label="my provider"
-            android:syncable="true" />
+             />
 
         <activity android:name=".activities.ArticleActivity"></activity>
     </application>

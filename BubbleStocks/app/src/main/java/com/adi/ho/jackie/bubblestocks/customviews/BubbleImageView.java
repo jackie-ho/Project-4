@@ -27,6 +27,7 @@ public class BubbleImageView extends ImageView{
         int yPadding = (int) (Math.random() * 1000) + 1000;
         RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
       //  params.setMargins(xPadding,yPadding,0,0);
+//        params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
         setLayoutParams(params);
         setMaxHeight(100);
         setMaxWidth(100);

@@ -1,4 +1,4 @@
-package com.adi.ho.jackie.bubblestocks.Fragments;
+package com.adi.ho.jackie.bubblestocks.fragments;
 
 import android.app.Activity;
 import android.content.ContentValues;
@@ -29,16 +29,16 @@ import android.widget.Toast;
 
 import com.adi.ho.jackie.bubblestocks.database.StockContentProvider;
 import com.adi.ho.jackie.bubblestocks.database.StockDBHelper;
-import com.adi.ho.jackie.bubblestocks.HttpConnections.CompanySpecificNewsRequest;
-import com.adi.ho.jackie.bubblestocks.MainActivity;
+import com.adi.ho.jackie.bubblestocks.httpconnections.CompanySpecificNewsRequest;
+import com.adi.ho.jackie.bubblestocks.activities.MainActivity;
 import com.adi.ho.jackie.bubblestocks.R;
-import com.adi.ho.jackie.bubblestocks.RecyclerviewItems.DividerItemDecoration;
-import com.adi.ho.jackie.bubblestocks.RecyclerviewItems.NewsRecyclerAdapter;
-import com.adi.ho.jackie.bubblestocks.RecyclerviewItems.VerticalSpaceItemDecoration;
-import com.adi.ho.jackie.bubblestocks.StockPortfolio.DBStock;
-import com.adi.ho.jackie.bubblestocks.StockPortfolio.HistoricalStockQuoteWrapper;
-import com.adi.ho.jackie.bubblestocks.StockPortfolio.IntradayStockData;
-import com.adi.ho.jackie.bubblestocks.StockPortfolio.PortfolioStock;
+import com.adi.ho.jackie.bubblestocks.recyclerviewitems.DividerItemDecoration;
+import com.adi.ho.jackie.bubblestocks.recyclerviewitems.NewsRecyclerAdapter;
+import com.adi.ho.jackie.bubblestocks.recyclerviewitems.VerticalSpaceItemDecoration;
+import com.adi.ho.jackie.bubblestocks.stockportfolio.DBStock;
+import com.adi.ho.jackie.bubblestocks.stockportfolio.HistoricalStockQuoteWrapper;
+import com.adi.ho.jackie.bubblestocks.stockportfolio.IntradayStockData;
+import com.adi.ho.jackie.bubblestocks.stockportfolio.PortfolioStock;
 import com.adi.ho.jackie.bubblestocks.companyspecificrssfeed.CompanyResult;
 import com.adi.ho.jackie.bubblestocks.customviews.CandleCustomMarkerView;
 import com.github.mikephil.charting.charts.CandleStickChart;
@@ -119,7 +119,7 @@ public class StockDetailFragment extends Fragment {
     private int stockId;
     private FloatingActionButton fab;
     private ContentObserver mObserver;
-    private boolean isStockInDB;
+    private boolean isStockInDB = false;
     private RecyclerView mRecycler;
     private NewsRecyclerAdapter mAdapter;
     private List<com.adi.ho.jackie.bubblestocks.companyspecificrssfeed.Item> mArticleTitleList;
@@ -207,7 +207,7 @@ public class StockDetailFragment extends Fragment {
             symbol = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_SYMBOL));
             if (symbol.equalsIgnoreCase(stockData.getSymbol())) {
                 isStockInDB = true;
-                return;
+                break;
             }
             cursor.moveToNext();
         }
@@ -573,8 +573,8 @@ public class StockDetailFragment extends Fragment {
     private void setStockData() {
         mYearLow.setText("52 Week Low: $" + stockData.getYearLow());
         mYearHigh.setText("52 Week High: $" + stockData.getYearHigh());
-        mTarget.setText("One Year Target Price: $" + stockData.getOneYearPriceEstimate());
-        mAvgVol.setText("Average Volume: " + stockData.getAvgVol());
+        mTarget.setText("1Y Target: $" + stockData.getOneYearPriceEstimate());
+        mAvgVol.setText("Avg Volume: " + stockData.getAvgVol());
         mEPS.setText("EPS: " + stockData.getEps());
         mDiviYield.setText("Dividend Yield: " + stockData.getDiviYield() + "%");
         mRevenue.setText("Revenue: $" + stockData.getRevenue());
@@ -738,41 +738,44 @@ public class StockDetailFragment extends Fragment {
             Uri stockUri = Uri.parse(StockContentProvider.CONTENT_URI + "/" + String.valueOf(stockId));
             Cursor cursor = getContext().getContentResolver().query(stockUri, null, StockDBHelper.COLUMN_ID
                     + " = ? ", new String[]{String.valueOf(stockId)}, null);
-            cursor.moveToFirst();
-            String newPrice = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_PRICE));
-            String openPrice = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_OPENPRICE));
-            String volume = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_VOLUME));
-            //Check whether new price is above old price
-            NumberFormat decimalFormat = NumberFormat.getPercentInstance();
-            decimalFormat.setMinimumFractionDigits(2);
-            try {
-                if (MainActivity.checkIfTradingTimeRange(1))
-                    if (Double.parseDouble(newPrice) > Double.parseDouble(openPrice)) {
+            if (cursor.getCount() > 0) {
+                cursor.moveToFirst();
+                String newPrice = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_PRICE));
+                String openPrice = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_OPENPRICE));
+                //          String openPrice = stockData.getPr
+                String volume = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_VOLUME));
+                //Check whether new price is above old price
+                NumberFormat decimalFormat = NumberFormat.getPercentInstance();
+                decimalFormat.setMinimumFractionDigits(2);
+                try {
+                    if (MainActivity.checkIfTradingTimeRange(1))
+                        if (Double.parseDouble(newPrice) > Double.parseDouble(openPrice)) {
 
-                        String instantPriceChange = String.valueOf(Float.parseFloat(newPrice) - Float.parseFloat(openPrice));
-                        // String instantPercentageChange = String.valueOf((Float.parseFloat(newPrice) - Float.parseFloat(openPrice))/ Float.parseFloat(stockData.getDayOpen()) * 100);
-                        Double instantPercentageChange = (Double.parseDouble(newPrice) - Double.parseDouble(openPrice)) / Double.parseDouble(openPrice);
-                        mPriceText.setText(NumberFormat.getCurrencyInstance().format(Double.parseDouble(newPrice)));
-                        mStockTicker.setText(DecimalFormat.getCurrencyInstance().format(Double.parseDouble(instantPriceChange))
-                                + "    +" + decimalFormat.format(instantPercentageChange));
-                        mArrowIcon.setImageResource(R.drawable.arrow_up3);
-                    } else if (Double.parseDouble(newPrice) < Double.parseDouble(openPrice)) {
-                        mPriceText.setText("$" + newPrice);
-                        String priceChange = String.valueOf(Math.abs(Float.parseFloat(newPrice) - Float.parseFloat(openPrice)));
-                        // percentageChange = String.valueOf((Float.parseFloat(newPrice) - Float.parseFloat(openPrice)) / Float.parseFloat(stockData.getDayOpen()) * 100);
-                        double percentageChange = (Double.parseDouble(newPrice) - Double.parseDouble(openPrice)) / Double.parseDouble(openPrice);
-                        mStockTicker.setText(DecimalFormat.getCurrencyInstance().format(Double.parseDouble(priceChange))
-                                + "    " + decimalFormat.format(percentageChange));
-                        mArrowIcon.setImageResource(R.drawable.arrow_down3);
-                    } else {
-                        mPriceText.setText(newPrice);
-                        mStockTicker.setText("N/C");
-                    }
-                mVol.setText("Volume: " + volume);
-                mTimeStampText.setText(getCurrentTime());
-                updateLineChart(newPrice);
-            } catch (ParseException e) {
-                e.printStackTrace();
+                            String instantPriceChange = String.valueOf(Float.parseFloat(newPrice) - Float.parseFloat(openPrice));
+                            // String instantPercentageChange = String.valueOf((Float.parseFloat(newPrice) - Float.parseFloat(openPrice))/ Float.parseFloat(stockData.getDayOpen()) * 100);
+                            Double instantPercentageChange = (Double.parseDouble(newPrice) - Double.parseDouble(openPrice)) / Double.parseDouble(openPrice);
+                            mPriceText.setText(NumberFormat.getCurrencyInstance().format(Double.parseDouble(newPrice)));
+                            mStockTicker.setText(DecimalFormat.getCurrencyInstance().format(Double.parseDouble(instantPriceChange))
+                                    + "    +" + decimalFormat.format(instantPercentageChange));
+                            mArrowIcon.setImageResource(R.drawable.arrow_up3);
+                        } else if (Double.parseDouble(newPrice) < Double.parseDouble(openPrice)) {
+                            mPriceText.setText("$" + newPrice);
+                            String priceChange = String.valueOf(Math.abs(Float.parseFloat(newPrice) - Float.parseFloat(openPrice)));
+                            // percentageChange = String.valueOf((Float.parseFloat(newPrice) - Float.parseFloat(openPrice)) / Float.parseFloat(stockData.getDayOpen()) * 100);
+                            double percentageChange = (Double.parseDouble(newPrice) - Double.parseDouble(openPrice)) / Double.parseDouble(openPrice);
+                            mStockTicker.setText(DecimalFormat.getCurrencyInstance().format(Double.parseDouble(priceChange))
+                                    + "    " + decimalFormat.format(percentageChange));
+                            mArrowIcon.setImageResource(R.drawable.arrow_down3);
+                        } else {
+                            mPriceText.setText(newPrice);
+                            mStockTicker.setText("N/C");
+                        }
+                    mVol.setText("Volume: " + volume);
+                    mTimeStampText.setText(getCurrentTime());
+                    updateLineChart(newPrice);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
             }
             cursor.close();
         }
@@ -809,7 +812,7 @@ public class StockDetailFragment extends Fragment {
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeZone(TimeZone.getTimeZone("America/New_York"));
         SimpleDateFormat sdf = new SimpleDateFormat("MM-dd HH:mm:ss");
-        return "Timestamp:" + sdf.format(calendar.getTime());
+        return "Timestamp: " + sdf.format(calendar.getTime());
     }
 }
 

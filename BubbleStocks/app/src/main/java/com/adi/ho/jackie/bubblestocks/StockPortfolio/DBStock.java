@@ -1,4 +1,4 @@
-package com.adi.ho.jackie.bubblestocks.StockPortfolio;
+package com.adi.ho.jackie.bubblestocks.stockportfolio;
 
 import android.os.Parcel;
 import android.os.Parcelable;

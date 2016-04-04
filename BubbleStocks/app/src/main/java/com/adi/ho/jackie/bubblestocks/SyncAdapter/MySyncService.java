@@ -1,4 +1,4 @@
-package com.adi.ho.jackie.bubblestocks.SyncAdapter;
+package com.adi.ho.jackie.bubblestocks.syncadapter;
 
 import android.app.Service;
 import android.content.Intent;

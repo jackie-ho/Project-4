@@ -1,4 +1,4 @@
-package com.adi.ho.jackie.bubblestocks.RecyclerviewItems;
+package com.adi.ho.jackie.bubblestocks.recyclerviewitems;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -21,16 +21,20 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
      * Default divider
      */
     public DividerItemDecoration(Context context) {
-        final TypedArray styledAttributes = context.obtainStyledAttributes(ATTRS);
-        mDivider = styledAttributes.getDrawable(0);
-        styledAttributes.recycle();
+        if (context != null) {
+            final TypedArray styledAttributes = context.obtainStyledAttributes(ATTRS);
+            mDivider = styledAttributes.getDrawable(0);
+            styledAttributes.recycle();
+        }
     }
 
     /**
      * Custom divider
      */
     public DividerItemDecoration(Context context, int resId) {
-        mDivider = ContextCompat.getDrawable(context, resId);
+        if (context != null) {
+            mDivider = ContextCompat.getDrawable(context, resId);
+        }
     }
 
     @Override

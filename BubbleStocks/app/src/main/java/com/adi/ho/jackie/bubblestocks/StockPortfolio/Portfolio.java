@@ -1,9 +1,8 @@
-package com.adi.ho.jackie.bubblestocks.StockPortfolio;
+package com.adi.ho.jackie.bubblestocks.stockportfolio;
+
+import com.adi.ho.jackie.bubblestocks.customviews.PortfolioBubble;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
-
-import yahoofinance.Stock;
 
 /**
  * Created by JHADI on 3/21/16.
@@ -12,11 +11,13 @@ public class Portfolio {
 
     //Singleton portfolio
     private ArrayList<PortfolioStock> myStockPortfolio;
+    private ArrayList<PortfolioBubble> myStockBubblePortfolio;
     private static Portfolio instance;
 
 
     private Portfolio() {
         myStockPortfolio = new ArrayList<>();
+        myStockBubblePortfolio = new ArrayList<>();
     }
 
     public static Portfolio getInstance() {
@@ -30,6 +31,9 @@ public class Portfolio {
         myStockPortfolio.add(stock);
     }
 
+    public void addBubbleToList(PortfolioBubble bubble){
+        myStockBubblePortfolio.add(bubble);
+    }
     public ArrayList<PortfolioStock> getMyStockPortfolio(){
         return myStockPortfolio;
     }
@@ -38,4 +42,9 @@ public class Portfolio {
         return myStockPortfolio.size();
     }
 
+    public ArrayList<PortfolioBubble> getMyStockBubblePortfolio() {
+        return myStockBubblePortfolio;
+    }
+
+    public int getBubbleSize(){ return myStockBubblePortfolio.size();}
 }

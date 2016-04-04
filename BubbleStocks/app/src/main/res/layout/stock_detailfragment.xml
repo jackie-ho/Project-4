@@ -32,6 +32,7 @@
         android:layout_marginLeft="3dp"
         android:layout_alignParentRight="true"
         android:gravity="right"
+        android:paddingRight="16dp"
         android:textColor="#000000"
         android:layout_toRightOf="@id/stock_detail_companyname"
         />
@@ -43,14 +44,14 @@
     android:background="#ffffff">
 
     <TextView
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/time_ticker"
         android:textSize="10sp"
         android:text="Time stamp"
         android:textColor="#000000"
-        android:layout_weight="0.3"
         android:paddingLeft="16dp"
+
         />
 
     <View
@@ -158,12 +159,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingLeft="16dp"
-            android:paddingRight="16dp">
+            >
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:background="@drawable/textview_border">
                 <TextView
                     android:id="@+id/stock_detail_volumetext"
                     android:layout_width="0dp"
@@ -184,7 +187,10 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:background="@drawable/textview_border">
                 <TextView
                     android:id="@+id/stock_detail_averagevolumetext"
                     android:layout_width="0dp"
@@ -205,7 +211,10 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:background="@drawable/textview_border">
                 <TextView
                     android:id="@+id/stock_detail_52wkhightext"
                     android:layout_width="0dp"
@@ -226,12 +235,16 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:background="@drawable/textview_border">
                 <TextView
                     android:id="@+id/stock_detail_52wklowtext"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="0.5"
+
                     android:layout_margin="2dp"
                     android:text="52 Week Low: "
                     android:layout_gravity="left"/>
@@ -247,7 +260,10 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:background="@drawable/textview_border"
+                android:paddingLeft="16dp"
+                android:paddingRight="4dp">
                 <TextView
                     android:id="@+id/stock_detail_stockrevenuetext"
                     android:layout_width="0dp"

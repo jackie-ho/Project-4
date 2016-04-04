@@ -1,4 +1,4 @@
-package com.adi.ho.jackie.bubblestocks.HttpConnections;
+package com.adi.ho.jackie.bubblestocks.httpconnections;
 
 import java.io.IOException;
 

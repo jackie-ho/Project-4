@@ -1,6 +1,5 @@
-package com.adi.ho.jackie.bubblestocks.StockPortfolio;
+package com.adi.ho.jackie.bubblestocks.stockportfolio;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 

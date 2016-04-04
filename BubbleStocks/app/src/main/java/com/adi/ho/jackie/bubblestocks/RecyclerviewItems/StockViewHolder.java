@@ -1,4 +1,4 @@
-package com.adi.ho.jackie.bubblestocks.RecyclerviewItems;
+package com.adi.ho.jackie.bubblestocks.recyclerviewitems;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.View;

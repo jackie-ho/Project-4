@@ -2,7 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.adi.ho.jackie.bubblestocks.Fragments.TopNewsFragment"
+    tools:context="com.adi.ho.jackie.bubblestocks.fragments.TopNewsFragment"
     android:background="#ffffff">
 
     <android.support.v7.widget.RecyclerView

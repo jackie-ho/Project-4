@@ -1,4 +1,4 @@
-package com.adi.ho.jackie.bubblestocks.RecyclerviewItems;
+package com.adi.ho.jackie.bubblestocks.recyclerviewitems;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
@@ -7,7 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.adi.ho.jackie.bubblestocks.R;
-import com.adi.ho.jackie.bubblestocks.StockPortfolio.DBStock;
+import com.adi.ho.jackie.bubblestocks.stockportfolio.DBStock;
 
 import java.util.List;
 

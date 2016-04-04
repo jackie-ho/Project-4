@@ -1,4 +1,4 @@
-package com.adi.ho.jackie.bubblestocks.SyncAdapter;
+package com.adi.ho.jackie.bubblestocks.syncadapter;
 
 /**
  * Created by JHADI on 3/30/16.

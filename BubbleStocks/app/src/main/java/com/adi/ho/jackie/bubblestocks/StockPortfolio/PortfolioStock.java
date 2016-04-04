@@ -1,4 +1,4 @@
-package com.adi.ho.jackie.bubblestocks.StockPortfolio;
+package com.adi.ho.jackie.bubblestocks.stockportfolio;
 
 /**
  * Created by JHADI on 4/3/16.

@@ -1,4 +1,4 @@
-package com.adi.ho.jackie.bubblestocks.SyncAdapter;
+package com.adi.ho.jackie.bubblestocks.syncadapter;
 
 import android.accounts.Account;
 import android.content.AbstractThreadedSyncAdapter;
@@ -15,9 +15,9 @@ import android.os.RemoteException;
 
 import com.adi.ho.jackie.bubblestocks.database.StockContentProvider;
 import com.adi.ho.jackie.bubblestocks.database.StockDBHelper;
-import com.adi.ho.jackie.bubblestocks.HttpConnections.MarkitHttpSyncRequest;
-import com.adi.ho.jackie.bubblestocks.HttpConnections.NasdaqIntradayHttpRequest;
-import com.adi.ho.jackie.bubblestocks.StockPortfolio.DBStock;
+import com.adi.ho.jackie.bubblestocks.httpconnections.MarkitHttpSyncRequest;
+import com.adi.ho.jackie.bubblestocks.httpconnections.NasdaqIntradayHttpRequest;
+import com.adi.ho.jackie.bubblestocks.stockportfolio.DBStock;
 
 import org.json.JSONException;
 import org.json.JSONObject;
