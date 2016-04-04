@@ -3,4 +3,6 @@
     <color name="colorPrimary">#e79c55</color>
     <color name="colorPrimaryDark">#ec7834</color>
     <color name="colorAccent">#fc0056</color>
+    <color name="colorCandleDecreasing">#ff8484</color>
+    <color name="colorCandleIncreasing">#a5ff87</color>
 </resources>

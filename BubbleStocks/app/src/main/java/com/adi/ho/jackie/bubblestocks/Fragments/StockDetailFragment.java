@@ -2,6 +2,7 @@ package com.adi.ho.jackie.bubblestocks.fragments;
 
 import android.app.Activity;
 import android.content.ContentValues;
+import android.content.pm.ActivityInfo;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -14,6 +15,7 @@ import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -168,6 +170,7 @@ public class StockDetailFragment extends Fragment {
         mTimeStampText = (TextView)view.findViewById(R.id.time_ticker);
         mRecycler = (RecyclerView)view.findViewById(R.id.stock_detail_articlelist);
 
+        mSixMonthDataButton = (Button)view.findViewById(R.id.sixmonth_databutton);
         oneDayGraphButton = (Button) view.findViewById(R.id.oneday_databutton);
         threeMonthGraphButton = (Button) view.findViewById(R.id.threemonth_databutton);
         historicalStockQuoteWrappers = new ArrayList<>();
@@ -243,6 +246,7 @@ public class StockDetailFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         oneDayGraphButton.setOnClickListener(oneDayListener);
         threeMonthGraphButton.setOnClickListener(threeMonthListener);
+        mSixMonthDataButton.setOnClickListener(sixMonthListener);
         fab.setOnClickListener(clickListener);
         if (stockData != null) {
             new RetrieveCompanyArticlesAsyncTask().execute(stockData.getSymbol());
@@ -332,7 +336,7 @@ public class StockDetailFragment extends Fragment {
 
         // scaling can now only be done on x- and y-axis separately
         mChart.setPinchZoom(false);
-
+        mChart.setMarkerView(new CandleCustomMarkerView(getContext(), R.layout.candlemarker_layout));
         mChart.setDrawGridBackground(false);
 
         XAxis xAxis = mChart.getXAxis();
@@ -353,6 +357,7 @@ public class StockDetailFragment extends Fragment {
     }
 
     private void fillCandleCharts() {
+//        getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         List<CandleEntry> dailyCandleData = new LinkedList<>();
         int index = 0;
         for (HistoricalStockQuoteWrapper hist : historicalStockQuoteWrappers) {
@@ -375,19 +380,25 @@ public class StockDetailFragment extends Fragment {
         set1.setAxisDependency(YAxis.AxisDependency.LEFT);
 //        set1.setColor(Color.rgb(80, 80, 80));
         set1.setShadowColor(Color.DKGRAY);
+        set1.setShadowColorSameAsCandle(true);
         set1.setShadowWidth(0.7f);
-        set1.setDecreasingColor(Color.RED);
+        set1.setDecreasingColor(ContextCompat.getColor(getContext(), R.color.colorCandleDecreasing)); //
         set1.setDecreasingPaintStyle(Paint.Style.FILL);
-        set1.setIncreasingColor(Color.rgb(122, 242, 84));
+        set1.setIncreasingColor(ContextCompat.getColor(getContext(), R.color.colorCandleIncreasing));
         set1.setIncreasingPaintStyle(Paint.Style.STROKE);
         set1.setNeutralColor(Color.BLUE);
+        set1.setDrawValues(false);
 
 
-        CandleData candleData = new CandleData(mXAxisDays, set1);
+
+        CandleData candleData = new CandleData(getPastSixMonths(), set1);
         mChart.setData(candleData);
+        mChart.animateX(1400);
+        mChart.invalidate();
     }
 
     private void setUpCombinedChart() {
+//        getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         mCombinedThreeMChart.setDescription("");
         mCombinedThreeMChart.setBackgroundColor(Color.WHITE);
         mCombinedThreeMChart.setDrawGridBackground(false);
@@ -463,6 +474,17 @@ public class StockDetailFragment extends Fragment {
         }
     };
 
+    View.OnClickListener sixMonthListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (mChart.getVisibility() == View.GONE){
+                mChart.setVisibility(View.VISIBLE);
+                mDailyChart.setVisibility(View.GONE);
+                mCombinedThreeMChart.setVisibility(View.GONE);
+                fillCandleCharts();
+            }
+        }
+    };
 
     View.OnClickListener threeMonthListener = new View.OnClickListener() {
         @Override
@@ -491,6 +513,20 @@ public class StockDetailFragment extends Fragment {
 
         }
         return threeMonthList;
+    }
+
+    private ArrayList<String> getPastSixMonths(){
+        ArrayList<String> sixMonthList = new ArrayList<>();
+        if (historicalStockQuoteWrappers != null && historicalStockQuoteWrappers.size() > 0){
+            int counter = historicalStockQuoteWrappers.size();
+            while (sixMonthList.size() < historicalStockQuoteWrappers.size()){
+                sixMonthList.add(0, historicalStockQuoteWrappers.get(counter - 1).getDayOfQuote());
+                counter -=1;
+            }
+            sixMonthList.add(stockData.getDay());
+        }
+        return sixMonthList;
+
     }
 
     private BarData getPastThreeMonthsVolume() {
@@ -557,10 +593,11 @@ public class StockDetailFragment extends Fragment {
         threeMonthCandleSet.setAxisDependency(YAxis.AxisDependency.LEFT);
 //        set1.setColor(Color.rgb(80, 80, 80));
         threeMonthCandleSet.setShadowColor(Color.DKGRAY);
+        threeMonthCandleSet.setShadowColorSameAsCandle(true);
         threeMonthCandleSet.setShadowWidth(0.7f);
-        threeMonthCandleSet.setDecreasingColor(Color.RED);
+        threeMonthCandleSet.setDecreasingColor(ContextCompat.getColor(getContext(), R.color.colorCandleDecreasing));
         threeMonthCandleSet.setDecreasingPaintStyle(Paint.Style.FILL);
-        threeMonthCandleSet.setIncreasingColor(Color.rgb(122, 242, 84));
+        threeMonthCandleSet.setIncreasingColor(ContextCompat.getColor(getContext(), R.color.colorCandleIncreasing));
         threeMonthCandleSet.setIncreasingPaintStyle(Paint.Style.STROKE);
         threeMonthCandleSet.setNeutralColor(Color.BLUE);
         threeMonthCandleSet.setDrawValues(false);
@@ -611,6 +648,7 @@ public class StockDetailFragment extends Fragment {
 
     //Daily intraday data
     private void setUpDailyChart() {
+//        getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         mDailyChart.setDescription("");
         // enable touch gestures
         mDailyChart.setTouchEnabled(true);
