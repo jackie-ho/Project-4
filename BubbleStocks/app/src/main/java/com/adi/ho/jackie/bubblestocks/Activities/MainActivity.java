@@ -1,5 +1,6 @@
 package com.adi.ho.jackie.bubblestocks.activities;
 
+import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.animation.Animator;
@@ -7,14 +8,19 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Handler;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -44,6 +50,7 @@ import com.adi.ho.jackie.bubblestocks.httpconnections.DowHttpRequests;
 import com.adi.ho.jackie.bubblestocks.httpconnections.IntradayMarketDataRequest;
 import com.adi.ho.jackie.bubblestocks.httpconnections.NasdaqHttpRequest;
 import com.adi.ho.jackie.bubblestocks.httpconnections.NyseHttpRequest;
+import com.adi.ho.jackie.bubblestocks.httpconnections.SearchSuggestionHttpRequest;
 import com.adi.ho.jackie.bubblestocks.httpconnections.SpyHttpRequests;
 import com.adi.ho.jackie.bubblestocks.stockportfolio.DBStock;
 import com.adi.ho.jackie.bubblestocks.stockportfolio.HistoricalStockQuoteWrapper;
@@ -60,6 +67,10 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -72,16 +83,20 @@ import java.util.Locale;
 import java.util.Random;
 import java.util.TimeZone;
 
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
 import yahoofinance.histquotes.HistoricalQuote;
 import yahoofinance.histquotes.Interval;
 
 public class MainActivity extends AppCompatActivity implements StockFragment.SelectStock, OnChartValueSelectedListener, StockDetailFragment.OnTrackedListener {
-
+    private static final String yahooCall = "http://d.yimg.com/aq/autoc?query=";
+    private static final String yahooTags = "&region=US&lang=en-US";
     public static final String AUTHORITY = "com.adi.ho.jackie.bubblestocks.database.StockContentProvider";
     // Account type
-    public static final String ACCOUNT_TYPE = "example.com";
+    public static final String ACCOUNT_TYPE = "investor.com";
     // Account
     public static final String ACCOUNT = "default_account";
     private MaterialSearchView mMaterialSearchView;
@@ -101,6 +116,8 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     private ArrayList<Integer> colors;
     private PortfolioFragment portfolioFragment;
     private boolean syncActivated;
+    private OkHttpClient client;
+    private ArrayList<String> listSymbols;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,6 +137,8 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         fragmentTags = Arrays.asList(getResources().getStringArray(R.array.fragment_stack_tag));
         bubbleList = new ArrayList<>();
         bubbleDrawableList = new ArrayList<>();
+        listSymbols = new ArrayList<>();
+        client = new OkHttpClient();
         //Toolbar search reference
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         mMaterialSearchView = (MaterialSearchView) findViewById(R.id.material_searchview);
@@ -165,7 +184,10 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                return false;
+                if (newText.length() > 0) {
+                    new SearchAsynctask().execute(newText);
+                }
+                return true;
             }
         });
 
@@ -257,6 +279,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         menuInflater.inflate(R.menu.search_menu, menu);
         MenuItem searchItem = menu.findItem(R.id.action_search);
         mMaterialSearchView.setMenuItem(searchItem);
+        mMaterialSearchView.setSubmitOnClick(true);
         return true;
     }
 
@@ -671,7 +694,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     //Animation bubble
     private void animateBubbling(){
         Handler animationHandler = new Handler();
-        for (int i = 0; i < 30; i++) {
+        for (int i = 0; i < 100; i++) {
             Runnable animationRunnable = new Runnable() {
                 @Override
                 public void run() {
@@ -693,5 +716,96 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
             portfolioFragment.addBubbleToPortfolio(trackedStock);
         }
     }
+    private class SearchAsynctask extends AsyncTask<String, Void, String[]> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            listSymbols.clear();
+        }
+
+        @Override
+        protected String[] doInBackground(String... params) {
+            Request request = new Request.Builder()
+                    .url(yahooCall + params[0] + yahooTags)
+                    .build();
+
+            Response response = null;
+            try {
+                response = client.newCall(request).execute();
+                String data = response.body().string();
+                JSONObject initialSearch = new JSONObject(data);
+                JSONObject resultSet = initialSearch.getJSONObject("ResultSet");
+                JSONArray resultArray = resultSet.getJSONArray("Result");
+                for (int i = 0 ; i < resultArray.length() ; i++){
+                    JSONObject suggestion = resultArray.getJSONObject(i);
+                    String sugg = "("+suggestion.getString("symbol")+") ";
+                    listSymbols.add(suggestion.getString("symbol"));
+                }
+
+                //Keep list 5 items or under
+                if (listSymbols.size() <=5){
+                    String[] resultList = new String[listSymbols.size()];
+                    for (int j = 0; j < listSymbols.size(); j++){
+                        resultList[j] = listSymbols.get(j);
+                    }
+                    return resultList;
+                } else {
+                    String[] resultList = new String[5];
+                    for (int j = 0; j < 5; j++){
+                        resultList[j] = listSymbols.get(j);
+                    }
+                    return resultList;
+                }
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            return new String[0];
+        }
+
+        @Override
+        protected void onPostExecute(String[] strings) {
+            super.onPostExecute(strings);
+            //the suggestion filter isn't good.
+            if (strings.length>0){
+                mMaterialSearchView.setSuggestions(strings);
+
+            }
+
+        }
+    }
+
+//    private void checkMarshPermissions(){
+//        if (ContextCompat.checkSelfPermission(MainActivity.this,
+//                Manifest.permission.READ_CONTACTS)
+//                != PackageManager.PERMISSION_GRANTED) {
+//
+//            // Should we show an explanation?
+//            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+//                    Manifest.permission.READ_CONTACTS)) {
+//
+//                // Show an expanation to the user *asynchronously* -- don't block
+//                // this thread waiting for the user's response! After the user
+//                // sees the explanation, try again to request the permission.
+//
+//            } else {
+//
+//                // No explanation needed, we can request the permission.
+//
+//                ActivityCompat.requestPermissions(MainActivity.this,
+//                        new String[]{Manifest.permission.READ_CONTACTS},
+//                        MY_PERMISSIONS_REQUEST_READ_CONTACTS);
+//
+//                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+//                // app-defined int constant. The callback method gets the
+//                // result of the request.
+//            }
+//        }
+//    }
 }
 

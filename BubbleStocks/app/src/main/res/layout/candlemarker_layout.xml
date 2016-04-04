@@ -4,12 +4,7 @@
     android:layout_height="wrap_content"
     android:background="#436fff"
     android:padding="3dp">
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/marker_date"
-        android:textColor="#ffffff"
-        android:textAppearance="?android:attr/textAppearanceSmall"/>
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

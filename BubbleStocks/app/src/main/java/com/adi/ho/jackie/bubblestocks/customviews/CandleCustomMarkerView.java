@@ -23,7 +23,6 @@ public class CandleCustomMarkerView extends MarkerView {
     public CandleCustomMarkerView(Context context, int layoutResource) {
         super(context, layoutResource);
 
-        mDate = (TextView)findViewById(R.id.marker_date);
         mHigh = (TextView)findViewById(R.id.marker_highprice);
         mLow = (TextView)findViewById(R.id.marker_lowprice);
         mOpen = (TextView)findViewById(R.id.marker_openprice);
@@ -33,8 +32,8 @@ public class CandleCustomMarkerView extends MarkerView {
     @Override
     public void refreshContent(Entry e, Highlight highlight) {
         CandleEntry candleEntry = (CandleEntry)e;
-        String highPrice = "High: " + candleEntry.getHigh();
-        String lowPrice = "Low: " + candleEntry.getLow();
+        String highPrice = "High: " + candleEntry.getLow();
+        String lowPrice = "Low: " + candleEntry.getHigh();
         String openPrice = "Open: " + candleEntry.getOpen();
         String closePrice = "Close: " + candleEntry.getClose();
         mHigh.setText(highPrice); //Entries are reversed?

@@ -118,6 +118,24 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:orientation="horizontal">
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="0.3"/>
+            <Button
+                android:id="@+id/sizonth_databutton"
+
+                android:text="6M"
+                android:textColor="#FF7878"
+                android:textSize="20sp"
+                android:layout_margin="3dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/buttonshape1d"
+                android:shadowColor="#E6E6E6"
+                android:shadowDx="0"
+                android:shadowDy="0"
+                android:shadowRadius="5"/>
 
             <Button
                 android:id="@+id/threemonth_databutton"
@@ -133,10 +151,7 @@
                 android:shadowDx="0"
                 android:shadowDy="0"
                 android:shadowRadius="5"/>
-            <View
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_weight="0.3"/>
+
 
             <Button
                 android:id="@+id/oneday_databutton"
@@ -263,7 +278,7 @@
                 android:orientation="horizontal"
                 android:background="@drawable/textview_border"
                 android:paddingLeft="16dp"
-                android:paddingRight="4dp">
+                android:paddingRight="16dp">
                 <TextView
                     android:id="@+id/stock_detail_stockrevenuetext"
                     android:layout_width="0dp"
@@ -281,6 +296,14 @@
                     android:text="One Year Target: "
                     android:layout_gravity="left"/>
             </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:text="Company Related News"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"/>
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/stock_detail_articlelist"

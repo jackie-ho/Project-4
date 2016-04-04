@@ -27,6 +27,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.adi.ho.jackie.bubblestocks.customviews.LineCustomMarkerView;
 import com.adi.ho.jackie.bubblestocks.database.StockContentProvider;
 import com.adi.ho.jackie.bubblestocks.database.StockDBHelper;
 import com.adi.ho.jackie.bubblestocks.httpconnections.CompanySpecificNewsRequest;
@@ -124,6 +125,7 @@ public class StockDetailFragment extends Fragment {
     private NewsRecyclerAdapter mAdapter;
     private List<com.adi.ho.jackie.bubblestocks.companyspecificrssfeed.Item> mArticleTitleList;
     public OnTrackedListener mTrackedListener;
+    private Button mSixMonthDataButton;
 
     public static interface OnTrackedListener {
         public void onStockTracked(PortfolioStock newTrackedStock);
@@ -326,7 +328,7 @@ public class StockDetailFragment extends Fragment {
 
         // if more than 60 entries are displayed in the chart, no values will be
         // drawn
-        mChart.setMaxVisibleValueCount(60);//TODO:Change the max
+     //   mChart.setMaxVisibleValueCount(60);//TODO:Change the max
 
         // scaling can now only be done on x- and y-axis separately
         mChart.setPinchZoom(false);
@@ -616,6 +618,7 @@ public class StockDetailFragment extends Fragment {
         mDailyChart.setDragEnabled(true);
         mDailyChart.setScaleEnabled(true);
         mDailyChart.setPinchZoom(true);
+        mDailyChart.setMarkerView(new LineCustomMarkerView(getContext(), R.layout.linemarker_layout));
 
         //add entries to the graph
         ArrayList<Entry> dailyEntries = new ArrayList<>();
