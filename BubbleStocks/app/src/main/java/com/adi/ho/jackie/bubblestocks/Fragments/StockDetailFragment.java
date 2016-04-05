@@ -1,6 +1,7 @@
 package com.adi.ho.jackie.bubblestocks.fragments;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.pm.ActivityInfo;
 import android.database.ContentObserver;
@@ -324,6 +325,17 @@ public class StockDetailFragment extends Fragment {
         super.onResume();
         //Register content observer
         getContext().getContentResolver().registerContentObserver(StockContentProvider.CONTENT_URI, true, mObserver);
+        try {
+            if (MainActivity.checkIfTradingTimeRange(1)) {
+                Log.i(StockDetailFragment.class.getName(), "Manual sync requested");
+                Bundle bundle = new Bundle();
+                bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
+                bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+                getContext().getContentResolver().requestSync(MainActivity.createSyncAccount(getContext()), MainActivity.AUTHORITY, bundle);
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
     }
 
 
