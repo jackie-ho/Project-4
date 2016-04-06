@@ -9,3 +9,6 @@ Fun bubble layout where you can drag around your bubble stocks or pop the drifti
 Notifications currently not implemented.
 Multiple sync requests happen at the same time.
 
+###About
+
+Most of the market data is from Yahoo!. Charts were created with MPAndroidChart library.
