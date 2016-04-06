@@ -1,3 +1,11 @@
-# ![](https://ga-dash.s3.amazonaws.com/production/assets/logo-9f88ae6c9c3871690e33280fcf557f33.png) Project Readme :fire:
+#Bubble Stocks
 
-> Make sure to edit this file. You are required to provide a readme file describing what the app does, links to your Trello board, and any bugs that may exist!
+Bubbly fun stock app. Get real-time quotes and interactive graphs to make informed investment decisions. Includes most relevant financial information for almost all publicly traded companies. Includes accurate historical company and market data as well. Read top financial stories and related company stories for the stocks that you are most interested in!
+
+Fun bubble layout where you can drag around your bubble stocks or pop the drifting bubbles. Spin the wheel then search for stock symbols (with the help of autocomplete).
+
+##Bugs
+
+Notifications currently not implemented.
+Multiple sync requests happen at the same time.
+
