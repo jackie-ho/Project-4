@@ -4,7 +4,7 @@ package com.adi.ho.jackie.bubblestocks.yahoorssfeed;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class Body {
+public class Body{
 
     @SerializedName("rss")
     @Expose
