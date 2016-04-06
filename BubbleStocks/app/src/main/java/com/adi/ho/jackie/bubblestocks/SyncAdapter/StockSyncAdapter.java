@@ -8,6 +8,8 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.SyncResult;
 import android.database.Cursor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -89,8 +91,13 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
          //   marketThreads.execute(nasdaqRunnable);
            // marketThreads.execute(spyRunnable);
             //Async task to retrieve "tracked" stocks
+            ConnectivityManager cm = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+            boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
             for (int i = 0; i < stockPortfolioList.size(); i++) {
-                new StockQuoteRequestAsync().execute(stockPortfolioList.get(i));
+                if (isConnected) {
+                    new StockQuoteRequestAsync().execute(stockPortfolioList.get(i));
+                }
             }
 
         }

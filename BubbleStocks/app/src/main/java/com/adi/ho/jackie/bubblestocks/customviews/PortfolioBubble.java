@@ -17,6 +17,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.CycleInterpolator;
+import android.view.animation.LinearInterpolator;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -105,8 +107,6 @@ public class PortfolioBubble extends LinearLayout implements  View.OnTouchListen
         mPrice = (TextView) this.findViewById(R.id.stock_percentagechange);
         addColorsToArray();
         //Strings get set before it finishes inflating
-        mSymbol.setText("hihi");
-        mPrice.setText("baby");
         mSymbol.setTextSize(15f);
         Random randColor = new Random();
         setBackground(dynamicGenerateBubbleShape(colors.get(randColor.nextInt(colors.size()))));
@@ -134,6 +134,7 @@ public class PortfolioBubble extends LinearLayout implements  View.OnTouchListen
         mSymbol.setText(symbol);
     }
 
+    //Update price with appropriate format
     public void setmPrice(String price, String openPrice) {
         this.price = price;
         float currentPrice = Float.parseFloat(price);
@@ -155,6 +156,7 @@ public class PortfolioBubble extends LinearLayout implements  View.OnTouchListen
     }
 
 
+    //same method as in activity
     public void selectedStock(Stock searchedStock) {
         //Get historical data for the searched stock.
         ArrayList<HistoricalStockQuoteWrapper> historicalQuoteList = new ArrayList<>();
@@ -190,19 +192,21 @@ public class PortfolioBubble extends LinearLayout implements  View.OnTouchListen
 
     float dX, dY;
     long startClickTime;
-    private static final int MAX_CLICK_DURATION = 200;
+    private static final int MAX_CLICK_DURATION = 180;
 
     //Motion events, touch listener
     @Override
     public boolean onTouch(View v, MotionEvent event) {
          switch (event.getAction()) {
 
+             //on user press down
             case MotionEvent.ACTION_DOWN:
 
                 dX = v.getX() - event.getRawX();
                 dY = v.getY() - event.getRawY();
                 startClickTime = Calendar.getInstance().getTimeInMillis();
                 break;
+            // on user lift finger up
             case MotionEvent.ACTION_UP:
                 long clickDuration = Calendar.getInstance().getTimeInMillis() - startClickTime;
                 if (clickDuration < MAX_CLICK_DURATION){
@@ -210,6 +214,7 @@ public class PortfolioBubble extends LinearLayout implements  View.OnTouchListen
                     stockSearchThread.start();
                 } break;
 
+            // on drag motion
             case MotionEvent.ACTION_MOVE:
 
                     v.animate()
@@ -281,6 +286,14 @@ public class PortfolioBubble extends LinearLayout implements  View.OnTouchListen
 
     }
 
+    //On update
+    private void bubbleShake(){
+        this.animate().setDuration(300).setInterpolator(new LinearInterpolator()).y(50f).start();
+        this.animate().setDuration(300).setStartDelay(300).setInterpolator(new LinearInterpolator()).y(-50f).start();
+        this.animate().setDuration(300).setStartDelay(600).setInterpolator(new LinearInterpolator()).y(50f).start();
+        this.animate().setDuration(300).setStartDelay(900).setInterpolator(new LinearInterpolator()).y(-50f).start();
+    }
+
     private class UpdatePriceAsyncTask extends AsyncTask<String, Void, String[]>{
 
         @Override
@@ -309,6 +322,7 @@ public class PortfolioBubble extends LinearLayout implements  View.OnTouchListen
         @Override
         protected void onPostExecute(String[] s) {
             setmPrice(s[0], s[1]);
+         //   bubbleShake();
         }
     }
 }

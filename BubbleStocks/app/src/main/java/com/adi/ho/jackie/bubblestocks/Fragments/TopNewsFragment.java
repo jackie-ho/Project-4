@@ -17,6 +17,9 @@ import com.adi.ho.jackie.bubblestocks.recyclerviewitems.NewsRecyclerAdapter;
 import com.adi.ho.jackie.bubblestocks.recyclerviewitems.VerticalSpaceItemDecoration;
 import com.adi.ho.jackie.bubblestocks.yahoorssfeed.InitialResult;
 import com.adi.ho.jackie.bubblestocks.yahoorssfeed.Item;
+import com.adi.ho.jackie.bubblestocks.yahoorssfeed.Query;
+import com.adi.ho.jackie.bubblestocks.yahoorssfeed.Results;
+import com.adi.ho.jackie.bubblestocks.yahoorssfeed.Rss;
 import com.google.gson.Gson;
 
 import java.io.IOException;
@@ -77,7 +80,18 @@ public class TopNewsFragment extends Fragment {
             Gson gson = new Gson();
             topStories = gson.fromJson(s, InitialResult.class);
             //Find top news items titles
-            mTopNewsItems = topStories.getQuery().getResults().getBody().getRss().getChannel().getItem();
+            Query query = topStories.getQuery();
+            if (query!= null) {
+                Results results = query.getResults();
+                if (results != null) {
+                    Rss rss = results.getBody().getRss();
+                    if (rss != null) {
+                        mTopNewsItems = rss.getChannel().getItem();
+                    }
+                }
+            }
+
+//            mTopNewsItems = topStories.getQuery().getResults().getBody().getRss().getChannel().getItem();
             mAdapter = new NewsRecyclerAdapter(getContext(), mTopNewsItems);
             mRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(40));
             mRecyclerView.addItemDecoration(new DividerItemDecoration(getContext()));

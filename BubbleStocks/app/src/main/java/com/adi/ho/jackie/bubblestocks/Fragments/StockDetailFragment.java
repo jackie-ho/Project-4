@@ -1,5 +1,7 @@
 package com.adi.ho.jackie.bubblestocks.fragments;
 
+import android.animation.ArgbEvaluator;
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -9,6 +11,7 @@ import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -473,7 +476,6 @@ public class StockDetailFragment extends Fragment {
     View.OnClickListener oneDayListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            Toast.makeText(getContext(), "Button clicked", Toast.LENGTH_SHORT).show();
             if (mDailyChart.getVisibility() == View.GONE) {
                 mDailyChart.setVisibility(View.VISIBLE);
                 mChart.setVisibility(View.GONE);
@@ -501,18 +503,34 @@ public class StockDetailFragment extends Fragment {
 
     View.OnClickListener threeMonthListener = new View.OnClickListener() {
         @Override
-        public void onClick(View v) {
+        public void onClick(final View v) {
             //TODO: animate graph removal and addition with property animation, push it off screen instead of making it come visible
             if (mCombinedThreeMChart.getVisibility() == View.GONE) {
                 mCombinedThreeMChart.setVisibility(View.VISIBLE);
                 mDailyChart.setVisibility(View.GONE);
                 mChart.setVisibility(View.GONE);
                 setUpCombinedChart();
+                //Color animation for pressing a button
+//                Integer colorFrom = Color.rgb(217,209,106);
+//                Integer colorTo = Color.rgb(0,0,0);
+//                ValueAnimator buttonPressAnimation = ValueAnimator.ofObject(new ArgbEvaluator(),colorFrom,colorTo);
+//               buttonPressAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+//                   @Override
+//                   public void onAnimationUpdate(ValueAnimator animation) {
+//                       v.setBackgroundColor((Integer) animation.getAnimatedValue());
+//                   }
+//               });
+//
+//                buttonPressAnimation.setDuration(600).start();
+
 
             }
-            Toast.makeText(getContext(), "Pressed 3M", Toast.LENGTH_SHORT).show();
         }
     };
+
+
+
+
 
     private ArrayList<String> getPastThreeMonths() {
         ArrayList<String> threeMonthList = new ArrayList<>();
