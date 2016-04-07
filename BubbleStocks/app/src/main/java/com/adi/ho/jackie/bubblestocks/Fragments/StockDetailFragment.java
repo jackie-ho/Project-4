@@ -794,7 +794,7 @@ public class StockDetailFragment extends Fragment {
             PortfolioStock trackedStock = new PortfolioStock(stockData.getSymbol().toUpperCase(), stockData.getDayClose(), stockData.getDayOpen());
             mTrackedListener.onStockTracked(trackedStock);
             Log.i(StockDetailFragment.class.getName(), "Added to tracked stocks: " + stockData.getSymbol().toUpperCase());
-            Toast.makeText(getContext(), "Tracked.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Added to portfolio.", Toast.LENGTH_SHORT).show();
             v.setVisibility(View.GONE);
         }
     };
@@ -819,7 +819,7 @@ public class StockDetailFragment extends Fragment {
                 String newPrice = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_PRICE));
                 String openPrice = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_STOCK_OPENPRICE));
                 //          String openPrice = stockData.getPr
-                String volume = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_VOLUME));
+//                String volume = cursor.getString(cursor.getColumnIndex(StockDBHelper.COLUMN_VOLUME));
                 //Check whether new price is above old price
                 NumberFormat decimalFormat = NumberFormat.getPercentInstance();
                 decimalFormat.setMinimumFractionDigits(2);
@@ -846,7 +846,9 @@ public class StockDetailFragment extends Fragment {
                             mPriceText.setText(newPrice);
                             mStockTicker.setText("N/C");
                         }
-                    mVol.setText("Volume: " + volume);
+
+
+//                    mVol.setText("Volume: " + volume);
                     mTimeStampText.setText(getCurrentTime());
                     updateLineChart(newPrice);
                 } catch (ParseException e) {

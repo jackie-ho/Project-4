@@ -41,4 +41,5 @@ dependencies {
     compile 'com.github.scribejava:scribejava-apis:2.4.0'
     compile 'org.jsoup:jsoup:1.8.3'
     compile 'com.github.nirhart:parallaxscroll:1.0'
+    compile 'com.bartoszlipinski:viewpropertyobjectanimator:1.4.5'
 }

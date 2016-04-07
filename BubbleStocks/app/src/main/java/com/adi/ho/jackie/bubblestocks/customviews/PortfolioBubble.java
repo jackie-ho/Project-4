@@ -1,5 +1,8 @@
 package com.adi.ho.jackie.bubblestocks.customviews;
 
+import android.animation.Animator;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
@@ -17,6 +20,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.AnimationSet;
+import android.view.animation.AnticipateOvershootInterpolator;
 import android.view.animation.CycleInterpolator;
 import android.view.animation.LinearInterpolator;
 import android.widget.LinearLayout;
@@ -31,12 +36,14 @@ import com.adi.ho.jackie.bubblestocks.activities.MainActivity;
 import com.adi.ho.jackie.bubblestocks.R;
 import com.adi.ho.jackie.bubblestocks.stockportfolio.DBStock;
 import com.adi.ho.jackie.bubblestocks.stockportfolio.HistoricalStockQuoteWrapper;
+import com.bartoszlipinski.viewpropertyobjectanimator.ViewPropertyObjectAnimator;
 import com.github.mikephil.charting.utils.ColorTemplate;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Random;
 
 import yahoofinance.Stock;
@@ -286,12 +293,23 @@ public class PortfolioBubble extends LinearLayout implements  View.OnTouchListen
 
     }
 
-    //On update
+    //On update animation
     private void bubbleShake(){
-        this.animate().setDuration(300).setInterpolator(new LinearInterpolator()).y(50f).start();
-        this.animate().setDuration(300).setStartDelay(300).setInterpolator(new LinearInterpolator()).y(-50f).start();
-        this.animate().setDuration(300).setStartDelay(600).setInterpolator(new LinearInterpolator()).y(50f).start();
-        this.animate().setDuration(300).setStartDelay(900).setInterpolator(new LinearInterpolator()).y(-50f).start();
+
+        ObjectAnimator bounceUpAnimation = ViewPropertyObjectAnimator.animate(this).yBy(-20f).setDuration(300).get();
+        ObjectAnimator bounceDownAnimation = ViewPropertyObjectAnimator.animate(this).yBy(20f).setDuration(300).get();
+        ObjectAnimator bounceUpAnimation2 = ViewPropertyObjectAnimator.animate(this).yBy(-20f).setDuration(300).get();
+        ObjectAnimator bounceDownAnimation2 = ViewPropertyObjectAnimator.animate(this).yBy(20f).setDuration(300).get();
+        List<Animator> animatorList = new ArrayList<>();
+        animatorList.add(bounceUpAnimation);
+        animatorList.add(bounceDownAnimation);
+        animatorList.add(bounceUpAnimation2);
+        animatorList.add(bounceDownAnimation2);
+        AnimatorSet bubbleShakeSet = new AnimatorSet();
+        bubbleShakeSet.playSequentially(animatorList);
+        bubbleShakeSet.setInterpolator(new LinearInterpolator());
+        bubbleShakeSet.start();
+
     }
 
     private class UpdatePriceAsyncTask extends AsyncTask<String, Void, String[]>{
@@ -316,13 +334,14 @@ public class PortfolioBubble extends LinearLayout implements  View.OnTouchListen
                 cursor.moveToNext();
             }
 
+            cursor.close();
             return updatedPrice;
         }
 
         @Override
         protected void onPostExecute(String[] s) {
             setmPrice(s[0], s[1]);
-         //   bubbleShake();
+            bubbleShake();
         }
     }
 }

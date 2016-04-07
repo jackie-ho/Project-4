@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.util.Log;
 
 import com.adi.ho.jackie.bubblestocks.database.StockContentProvider;
 import com.adi.ho.jackie.bubblestocks.database.StockDBHelper;
@@ -169,6 +170,7 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
                 e.printStackTrace();
             } catch (JSONException e) {
                 e.printStackTrace();
+                Log.e(StockSyncAdapter.class.getName(), "Status error "+data);
             } finally {
                 if (callSuccess) {
                     Uri uri = Uri.parse(StockContentProvider.CONTENT_URI + "/" + id);
