@@ -4,11 +4,15 @@ Bubbly fun stock app. Get real-time quotes and interactive graphs to make inform
 
 Fun bubble layout where you can drag around your bubble stocks or pop the drifting bubbles. Spin the wheel then search for stock symbols (with the help of autocomplete).
 
+Published in the Play Store.
+
+https://play.google.com/store/apps/details?id=com.adi.ho.jackie.bubblestocks
+
 ##Bugs
 
 Notifications currently not implemented.
 Multiple sync requests happen at the same time.
 
-###About
+##About
 
 Most of the market data is from Yahoo!. Charts were created with MPAndroidChart library.
