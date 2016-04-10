@@ -10,4 +10,6 @@
     <color name="navWheelColor2">#c467b0</color>
     <color name="navWheelColor3">#55559e</color>
     <color name="navWheelColor4">#46972f</color>
+    <color name="bubbleColor1">#ffb300</color>
+    <color name="bubbleColor2">#ff0db6</color>
 </resources>

@@ -309,9 +309,12 @@ public class StockDetailFragment extends Fragment {
                 mCompanyNameText.setText("(" + stockData.getSymbol().toUpperCase() + ") " + companyName + " - ");
 
                 JSONArray intradayPricesArray = intradayInitialObject.getJSONArray("series");
+                String timestamp = "";
                 for (int i = 0; i < intradayPricesArray.length(); i++) {
                     intradayStockDataLinkedList.add(new IntradayStockData(intradayPricesArray.getJSONObject(i)));
                 }
+                mTimeStampText.setText(intradayStockDataLinkedList.get(intradayStockDataLinkedList.size()-1).getTradeTimeStamp());
+
                 Log.v("INTRADAY", "size of list: " + intradayStockDataLinkedList.size());
 
             } catch (JSONException e) {
@@ -661,7 +664,6 @@ public class StockDetailFragment extends Fragment {
 
         }
 
-
     }
 
     @Override
@@ -705,13 +707,13 @@ public class StockDetailFragment extends Fragment {
         //Add open price line
         Typeface tf = Typeface.createFromAsset(getContext().getAssets(), "OpenSans-Regular.ttf");
 
-        LimitLine ll1 = new LimitLine(Float.parseFloat(intradayStockDataLinkedList.get(0).getOpenPrice()), "");
+        LimitLine ll1 = new LimitLine(Float.parseFloat(stockData.getDayOpen()), "");
         ll1.setLineWidth(4f);
         ll1.enableDashedLine(10f, 10f, 0f);
         ll1.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_TOP);
         ll1.setTextSize(10f);
         ll1.setTypeface(tf);
-        ll1.setLabel("Open Price: $" + intradayStockDataLinkedList.get(0).getOpenPrice());
+        ll1.setLabel("Open Price: $" + stockData.getDayOpen());
 
         YAxis leftAxis = mDailyChart.getAxisLeft();
         leftAxis.setEnabled(false);
@@ -820,7 +822,7 @@ public class StockDetailFragment extends Fragment {
                     NumberFormat decimalFormat = NumberFormat.getPercentInstance();
                     decimalFormat.setMinimumFractionDigits(2);
                     try {
-                        if (MainActivity.checkIfTradingTimeRange(1))
+                        if (MainActivity.checkIfTradingTimeRange(1)) {
                             if (Double.parseDouble(newPrice) > Double.parseDouble(openPrice)) {
 
                                 String instantPriceChange = String.valueOf(Float.parseFloat(newPrice) - Float.parseFloat(openPrice));
@@ -843,11 +845,18 @@ public class StockDetailFragment extends Fragment {
                                 mStockTicker.setText("N/C");
                             }
 
-
 //                    mVol.setText("Volume: " + volume);
-                        mTimeStampText.setText(getCurrentTime());
-                        updateLineChart(newPrice);
-                    } catch (ParseException e) {
+                            mTimeStampText.setText(getCurrentTime());
+                            updateLineChart(newPrice);
+                        } else {
+                            //change timestamp to 4:00 pm of last trading session if it is after hours
+                        }
+
+                    }
+
+
+
+                    catch (ParseException e) {
                         e.printStackTrace();
                     }
                 }
@@ -889,7 +898,7 @@ public class StockDetailFragment extends Fragment {
     private String getCurrentTime() {
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeZone(TimeZone.getTimeZone("America/New_York"));
-        SimpleDateFormat sdf = new SimpleDateFormat("MM-dd HH:mm:ss");
+        SimpleDateFormat sdf = new SimpleDateFormat("MM-dd HH:mm:ss z");
         return "Timestamp: " + sdf.format(calendar.getTime());
     }
 }

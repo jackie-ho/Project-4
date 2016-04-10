@@ -6,6 +6,7 @@ import org.json.JSONObject;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * Created by JHADI on 3/26/16.
@@ -17,6 +18,7 @@ public class IntradayStockData implements Comparable {
     private String lowPrice;
     private String openPrice;
     private String volume;
+    private long tradeTimeStamp;
 
     public IntradayStockData(JSONObject intradayJsonObject) throws JSONException {
 
@@ -24,9 +26,11 @@ public class IntradayStockData implements Comparable {
             Date date = new Date(intradayJsonObject.getLong("Timestamp") * 1000);
             SimpleDateFormat sdf = new SimpleDateFormat("h:mm");
             this.timestamp = String.valueOf( sdf.format(date));
+            this.tradeTimeStamp = intradayJsonObject.getLong("Timestamp") * 1000;
         } else {
             Date date = new Date(intradayJsonObject.getLong("timestamp") * 1000);
             this.timestamp = String.valueOf( date.getTime());
+            this.tradeTimeStamp = intradayJsonObject.getLong("timestamp") * 1000;
         }
         this.closePrice = intradayJsonObject.getString("close");
         this.highPrice = intradayJsonObject.getString("high");
@@ -44,6 +48,16 @@ public class IntradayStockData implements Comparable {
 
     public String getTimestamp() {
         return timestamp;
+    }
+
+    public String getTradeTimeStamp(){
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+        Date date = new Date(tradeTimeStamp);
+        cal.setTime(date);
+        SimpleDateFormat tradeSdf = new SimpleDateFormat("MM-dd HH:mm z");
+        return "Timestamp: "+ tradeSdf.format(cal.getTime());
+
     }
 
 

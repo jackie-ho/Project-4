@@ -346,7 +346,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         anyStock.setDay(formattedDate);
         anyStock.setDayClose(stock.getQuote().getPrice().toString());
         anyStock.setDayHigh(stock.getQuote().getDayHigh().toString());
-        anyStock.setDayOpen(stock.getQuote().getOpen().toString());
+       // anyStock.setDayOpen(stock.getQuote().getOpen().toString());
         anyStock.setDayLow(stock.getQuote().getDayLow().toString());
         anyStock.setSymbol(stock.getSymbol());
         anyStock.setAvgVol(stock.getQuote().getAvgVolume());
@@ -360,8 +360,13 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         anyStock.setPe(stock.getStats().getPe().toPlainString());
         anyStock.setEps(stock.getStats().getEps().toString());
         anyStock.setAvgVolBarEntries(String.valueOf(stock.getQuote().getAvgVolume()));
+        anyStock.setDayOpen(stock.getQuote().getPreviousClose().toString());
         //stick these in database
-        anyStock.setLastTradeTime(stock.getQuote().getLastTradeTimeStr());
+        Calendar lastTradeTime = stock.getQuote().getLastTradeTime();
+        SimpleDateFormat calFormat = new SimpleDateFormat("MM-dd HH:mm z");
+        String tradeTime = calFormat.format(lastTradeTime.getTime());
+
+        anyStock.setLastTradeTime(tradeTime);
         anyStock.setChange(stock.getQuote().getChange().toString());
         anyStock.setPercentChange(stock.getQuote().getChangeInPercent().toString());
         return anyStock;
@@ -483,8 +488,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
         dataSet.setSelectionShift(5f);
         dataSet.setDrawValues(false);
 
-        // add a lot of colors
-
+        // add a lot of colors, not for nav wheel
        colors = new ArrayList<Integer>();
 
         for (int c : ColorTemplate.VORDIPLOM_COLORS)

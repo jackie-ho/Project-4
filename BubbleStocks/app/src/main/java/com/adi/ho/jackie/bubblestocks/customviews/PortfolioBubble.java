@@ -12,6 +12,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -272,20 +273,29 @@ public class PortfolioBubble extends LinearLayout implements  View.OnTouchListen
     private void addColorsToArray(){
         colors = new ArrayList<Integer>();
 
-        for (int c : ColorTemplate.VORDIPLOM_COLORS)
-            colors.add(c);
-
-        for (int c : ColorTemplate.JOYFUL_COLORS)
-            colors.add(c);
-
-        for (int c : ColorTemplate.COLORFUL_COLORS)
-            colors.add(c);
-
-        for (int c : ColorTemplate.LIBERTY_COLORS)
-            colors.add(c);
-
-        for (int c : ColorTemplate.PASTEL_COLORS)
-            colors.add(c);
+        colors.add(Color.BLUE);
+        colors.add(Color.MAGENTA);
+        colors.add(Color.GRAY);
+        colors.add(Color.DKGRAY);
+        colors.add(Color.BLACK);
+        colors.add(Color.YELLOW);
+        colors.add(Color.CYAN);
+        colors.add(ContextCompat.getColor(getContext(),R.color.bubbleColor1));
+        colors.add(ContextCompat.getColor(getContext(),R.color.bubbleColor2));
+//        for (int c : ColorTemplate.VORDIPLOM_COLORS)
+//            colors.add(c);
+//
+//        for (int c : ColorTemplate.JOYFUL_COLORS)
+//            colors.add(c);
+//
+//        for (int c : ColorTemplate.COLORFUL_COLORS)
+//            colors.add(c);
+//
+//        for (int c : ColorTemplate.LIBERTY_COLORS)
+//            colors.add(c);
+//
+//        for (int c : ColorTemplate.PASTEL_COLORS)
+//            colors.add(c);
     }
 
     public void updatePrice(){
