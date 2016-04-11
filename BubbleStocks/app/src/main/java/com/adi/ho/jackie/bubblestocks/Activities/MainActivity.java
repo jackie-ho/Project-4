@@ -193,7 +193,6 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
-                        Toast.makeText(MainActivity.this, "Invalid Stock Symbol", Toast.LENGTH_SHORT).show();
                     }
                 }
             };
@@ -340,35 +339,39 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
     // ============================Convert Stock object to Parcelable objects for fragments==========================
     public static DBStock setStockInfo(Stock stock) {
         DBStock anyStock = new DBStock();
-        SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy");
-        Calendar c = Calendar.getInstance();
-        String formattedDate = df.format(c.getTime());
-        anyStock.setDay(formattedDate);
-        anyStock.setDayClose(stock.getQuote().getPrice().toString());
-        anyStock.setDayHigh(stock.getQuote().getDayHigh().toString());
-       // anyStock.setDayOpen(stock.getQuote().getOpen().toString());
-        anyStock.setDayLow(stock.getQuote().getDayLow().toString());
-        anyStock.setSymbol(stock.getSymbol());
-        anyStock.setAvgVol(stock.getQuote().getAvgVolume());
-        anyStock.setDiviYield(stock.getDividend().getAnnualYieldPercent().toString());
-        anyStock.setMarketCap(Double.parseDouble(stock.getStats().getMarketCap().toString()));
-        anyStock.setYearLow(stock.getQuote().getYearLow().toString());
-        anyStock.setYearHigh(stock.getQuote().getYearHigh().toEngineeringString());
-        anyStock.setRevenue(Double.parseDouble(stock.getStats().getRevenue().toString()));
-        anyStock.setOneYearPriceEstimate(stock.getStats().getOneYearTargetPrice().toString());
-        anyStock.setPeg(stock.getStats().getPeg().toString());
-        anyStock.setPe(stock.getStats().getPe().toPlainString());
-        anyStock.setEps(stock.getStats().getEps().toString());
-        anyStock.setAvgVolBarEntries(String.valueOf(stock.getQuote().getAvgVolume()));
-        anyStock.setDayOpen(stock.getQuote().getPreviousClose().toString());
-        //stick these in database
-        Calendar lastTradeTime = stock.getQuote().getLastTradeTime();
-        SimpleDateFormat calFormat = new SimpleDateFormat("MM-dd HH:mm z");
-        String tradeTime = calFormat.format(lastTradeTime.getTime());
 
-        anyStock.setLastTradeTime(tradeTime);
-        anyStock.setChange(stock.getQuote().getChange().toString());
-        anyStock.setPercentChange(stock.getQuote().getChangeInPercent().toString());
+            SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy");
+            Calendar c = Calendar.getInstance();
+            String formattedDate = df.format(c.getTime());
+            anyStock.setDay(formattedDate);
+            anyStock.setDayClose(stock.getQuote().getPrice().toString());
+            anyStock.setDayHigh(stock.getQuote().getDayHigh().toString());
+            // anyStock.setDayOpen(stock.getQuote().getOpen().toString());
+            anyStock.setDayLow(stock.getQuote().getDayLow().toString());
+            anyStock.setSymbol(stock.getSymbol());
+            anyStock.setAvgVol(stock.getQuote().getAvgVolume());
+            anyStock.setDiviYield(stock.getDividend().getAnnualYieldPercent().toString());
+            anyStock.setMarketCap(Double.parseDouble(stock.getStats().getMarketCap().toString()));
+            anyStock.setYearLow(stock.getQuote().getYearLow().toString());
+            anyStock.setYearHigh(stock.getQuote().getYearHigh().toEngineeringString());
+            anyStock.setRevenue(Double.parseDouble(stock.getStats().getRevenue().toString()));
+            anyStock.setOneYearPriceEstimate(stock.getStats().getOneYearTargetPrice().toString());
+            anyStock.setPeg(stock.getStats().getPeg().toString());
+            anyStock.setPe(stock.getStats().getPe().toPlainString());
+            anyStock.setEps(stock.getStats().getEps().toString());
+            anyStock.setAvgVolBarEntries(String.valueOf(stock.getQuote().getAvgVolume()));
+            anyStock.setDayOpen(stock.getQuote().getPreviousClose().toString());
+            //stick these in database
+
+        if (stock.getQuote().getLastTradeTime() != null) {
+            Calendar lastTradeTime = stock.getQuote().getLastTradeTime();
+            SimpleDateFormat calFormat = new SimpleDateFormat("MM-dd HH:mm z");
+            String tradeTime = calFormat.format(lastTradeTime.getTime());
+            anyStock.setLastTradeTime(tradeTime);
+        }
+            anyStock.setChange(stock.getQuote().getChange().toString());
+            anyStock.setPercentChange(stock.getQuote().getChangeInPercent().toString());
+
         return anyStock;
     }
 

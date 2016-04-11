@@ -47,4 +47,16 @@ public class Portfolio {
     }
 
     public int getBubbleSize(){ return myStockBubblePortfolio.size();}
+
+    public void updatePortfolioStocks(String symbol, String price, String openPrice){
+        //Update prices in portfolio
+        for (PortfolioStock stock: myStockPortfolio){
+            if (stock.getmSymbol().equalsIgnoreCase(symbol)){
+                stock.setmPrice(price);
+                stock.setmOpenPrice(openPrice);
+                return;
+            }
+        }
+
+    }
 }

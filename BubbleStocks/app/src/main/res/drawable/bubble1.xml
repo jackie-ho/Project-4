@@ -14,7 +14,7 @@
         android:height="80dp"
         android:width="80dp" />
     <stroke
-        android:width="4px"
+        android:width="8px"
         android:color="#ffffff"/>
 
 </shape>

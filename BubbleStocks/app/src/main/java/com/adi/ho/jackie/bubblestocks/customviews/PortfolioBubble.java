@@ -37,6 +37,7 @@ import com.adi.ho.jackie.bubblestocks.activities.MainActivity;
 import com.adi.ho.jackie.bubblestocks.R;
 import com.adi.ho.jackie.bubblestocks.stockportfolio.DBStock;
 import com.adi.ho.jackie.bubblestocks.stockportfolio.HistoricalStockQuoteWrapper;
+import com.adi.ho.jackie.bubblestocks.stockportfolio.Portfolio;
 import com.bartoszlipinski.viewpropertyobjectanimator.ViewPropertyObjectAnimator;
 import com.github.mikephil.charting.utils.ColorTemplate;
 
@@ -64,6 +65,7 @@ public class PortfolioBubble extends LinearLayout implements  View.OnTouchListen
     private int width;
     private FragmentManager fragmentManager;
     private ArrayList<Integer> colors;
+    private Portfolio portfolio;
 
     //Compound view bubble
     Context context;
@@ -299,6 +301,7 @@ public class PortfolioBubble extends LinearLayout implements  View.OnTouchListen
     }
 
     public void updatePrice(){
+       portfolio = Portfolio.getInstance();
         new UpdatePriceAsyncTask().execute(symbol);
 
     }
@@ -330,7 +333,8 @@ public class PortfolioBubble extends LinearLayout implements  View.OnTouchListen
             String[] columns = new String[]{StockDBHelper.COLUMN_STOCK_SYMBOL, StockDBHelper.COLUMN_STOCK_PRICE};
             String[] updatedPrice = new String[2];
             String stockSymbol = params[0];
-
+            //Update prices in the portfolio
+            Portfolio portfolio = Portfolio.getInstance();
 
             Cursor cursor = context.getContentResolver().query(StockContentProvider.CONTENT_URI,columns ,
                     null, null, null, null);
@@ -343,7 +347,7 @@ public class PortfolioBubble extends LinearLayout implements  View.OnTouchListen
                 }
                 cursor.moveToNext();
             }
-
+            portfolio.updatePortfolioStocks(stockSymbol, updatedPrice[0], updatedPrice[1]);
             cursor.close();
             return updatedPrice;
         }

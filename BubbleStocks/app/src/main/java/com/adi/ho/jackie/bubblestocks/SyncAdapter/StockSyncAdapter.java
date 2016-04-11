@@ -106,44 +106,44 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
 
     }
 
-    Runnable spyRunnable = new Runnable() {
-        @Override
-        public void run() {
-            try {
-                Stock stock = YahooFinance.get("SPY");
-                String stocksymbol = "SPY";
-                String lastPrice = stock.getQuote().getPrice().toString();
-                ContentValues spyValues = new ContentValues();
-                spyValues.put(StockDBHelper.COLUMN_STOCK_PRICE, lastPrice);
-                Uri uri = Uri.parse(StockContentProvider.CONTENT_URI + "/2");
-                mContentResolver.update(uri, spyValues, StockDBHelper.COLUMN_STOCK_SYMBOL + " = ? ", new String[]{"SPY"});
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    };
-
-    Runnable nasdaqRunnable = new Runnable() {
-        String nasdaqData;
-
-        @Override
-        public void run() {
-            try {
-                nasdaqData = new NasdaqIntradayHttpRequest().run();
-                nasdaqData = nasdaqData.substring(nasdaqData.length() - 9, nasdaqData.length() - 2);
-                if (nasdaqData.contains(",")) {
-                    nasdaqData = nasdaqData.substring(1);
-                }
-                Uri uri = Uri.parse(StockContentProvider.CONTENT_URI + "/1");
-                ContentValues nasdaqValues = new ContentValues();
-                nasdaqValues.put(StockDBHelper.COLUMN_STOCK_PRICE, nasdaqData);
-                mContentResolver.update(uri, nasdaqValues, StockDBHelper.COLUMN_STOCK_SYMBOL + " = ?", new String[]{"IXIC"});
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    };
+//    Runnable spyRunnable = new Runnable() {
+//        @Override
+//        public void run() {
+//            try {
+//                Stock stock = YahooFinance.get("SPY");
+//                String stocksymbol = "SPY";
+//                String lastPrice = stock.getQuote().getPrice().toString();
+//                ContentValues spyValues = new ContentValues();
+//                spyValues.put(StockDBHelper.COLUMN_STOCK_PRICE, lastPrice);
+//                Uri uri = Uri.parse(StockContentProvider.CONTENT_URI + "/2");
+//                mContentResolver.update(uri, spyValues, StockDBHelper.COLUMN_STOCK_SYMBOL + " = ? ", new String[]{"SPY"});
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    };
+//
+//    Runnable nasdaqRunnable = new Runnable() {
+//        String nasdaqData;
+//
+//        @Override
+//        public void run() {
+//            try {
+//                nasdaqData = new NasdaqIntradayHttpRequest().run();
+//                nasdaqData = nasdaqData.substring(nasdaqData.length() - 9, nasdaqData.length() - 2);
+//                if (nasdaqData.contains(",")) {
+//                    nasdaqData = nasdaqData.substring(1);
+//                }
+//                Uri uri = Uri.parse(StockContentProvider.CONTENT_URI + "/1");
+//                ContentValues nasdaqValues = new ContentValues();
+//                nasdaqValues.put(StockDBHelper.COLUMN_STOCK_PRICE, nasdaqData);
+//                mContentResolver.update(uri, nasdaqValues, StockDBHelper.COLUMN_STOCK_SYMBOL + " = ?", new String[]{"IXIC"});
+//
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    };
 
     private class StockQuoteRequestAsync extends AsyncTask<StockSyncItem, Void, String> {
         DBStock stock = new DBStock();
@@ -179,6 +179,12 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
                     stockValues.put(StockDBHelper.COLUMN_STOCK_OPENPRICE, stock.getDayOpen());
                     stockValues.put(StockDBHelper.COLUMN_VOLUME, stock.getTodaysVolume());
                     mContentResolver.update(uri, stockValues, StockDBHelper.COLUMN_ID + " = ? ", new String[]{id});
+                    try {
+                        Thread.sleep(500);
+                        Log.d(StockSyncAdapter.class.getName(), "Sleeping background thread for 500ms.");
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
             return price;

@@ -713,7 +713,7 @@ public class StockDetailFragment extends Fragment {
         ll1.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_TOP);
         ll1.setTextSize(10f);
         ll1.setTypeface(tf);
-        ll1.setLabel("Open Price: $" + stockData.getDayOpen());
+        ll1.setLabel("Previous Close: $" + stockData.getDayOpen());
 
         YAxis leftAxis = mDailyChart.getAxisLeft();
         leftAxis.setEnabled(false);

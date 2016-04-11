@@ -171,6 +171,7 @@ public class PortfolioFragment extends Fragment {
     private void updateStocks(){
         for (PortfolioBubble portfolioBubble : mPortfolio.getMyStockBubblePortfolio()){
             portfolioBubble.updatePrice();
+
         }
     }
 
