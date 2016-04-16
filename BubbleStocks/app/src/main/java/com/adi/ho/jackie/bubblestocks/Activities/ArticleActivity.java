@@ -15,6 +15,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 
 public class ArticleActivity extends AppCompatActivity {
 
@@ -66,7 +67,8 @@ public class ArticleActivity extends AppCompatActivity {
             mWebView.post(new Runnable() {
                 @Override
                 public void run() {
-                    mWebView.loadData(body,"text/html",null);
+                    mWebView.loadData(URLEncoder.encode(body)
+                            .replace("'", "&apos").replace("+","%20"),"text/html; charset=UTF-8",null);
                 }
             });
 

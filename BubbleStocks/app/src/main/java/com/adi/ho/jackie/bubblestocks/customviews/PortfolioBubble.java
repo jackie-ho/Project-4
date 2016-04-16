@@ -263,7 +263,7 @@ public class PortfolioBubble extends LinearLayout implements  View.OnTouchListen
         drawable.setGradientRadius(150f);
         drawable.setGradientType(GradientDrawable.RADIAL_GRADIENT);
         drawable.setDither(true);
-        drawable.setStroke((int) 2, Color.parseColor("#EEEEEE"));
+        drawable.setStroke((int) 8, Color.parseColor("#EEEEEE"));
         Resources r = getResources();
         float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 80, r.getDisplayMetrics());
         drawable.setSize((int)px, (int)px);
@@ -280,24 +280,17 @@ public class PortfolioBubble extends LinearLayout implements  View.OnTouchListen
         colors.add(Color.GRAY);
         colors.add(Color.DKGRAY);
         colors.add(Color.BLACK);
-        colors.add(Color.YELLOW);
+        colors.add(Color.rgb(137,137,137));
+        colors.add(Color.rgb(205,192,176));
+        colors.add(Color.rgb(205,175,149));
+        colors.add(Color.rgb(205,197,191));
+        colors.add(Color.rgb(85,107,47));
+        colors.add(Color.rgb(210,105,30));
+        colors.add(Color.rgb(139,69,19));
         colors.add(Color.CYAN);
         colors.add(ContextCompat.getColor(getContext(),R.color.bubbleColor1));
         colors.add(ContextCompat.getColor(getContext(),R.color.bubbleColor2));
-//        for (int c : ColorTemplate.VORDIPLOM_COLORS)
-//            colors.add(c);
-//
-//        for (int c : ColorTemplate.JOYFUL_COLORS)
-//            colors.add(c);
-//
-//        for (int c : ColorTemplate.COLORFUL_COLORS)
-//            colors.add(c);
-//
-//        for (int c : ColorTemplate.LIBERTY_COLORS)
-//            colors.add(c);
-//
-//        for (int c : ColorTemplate.PASTEL_COLORS)
-//            colors.add(c);
+
     }
 
     public void updatePrice(){
