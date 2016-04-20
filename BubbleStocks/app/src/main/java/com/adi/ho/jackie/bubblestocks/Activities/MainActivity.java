@@ -281,6 +281,7 @@ public class MainActivity extends AppCompatActivity implements StockFragment.Sel
                 SharedPreferences.Editor editor = settings.edit();
                 editor.putBoolean(SYNC_STARTED, false);
                 editor.commit();
+
             }
         } catch (ParseException e) {
             e.printStackTrace();
